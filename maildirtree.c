@@ -260,7 +260,8 @@ static void print_tree (struct Directory * start, unsigned int level)
       k--;
     }
     
-    printf ("(%u/%u)\n", start->unread, start->read + start->unread);
+    printf ("%s(%u/%u)\033[0m\n", 
+	(start->unread > 0) ? "\033[1m" : "", start->unread, start->read + start->unread);
   }
   
   for (j = 0; j < start->count; j++)
