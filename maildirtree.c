@@ -60,7 +60,11 @@ int main (int argc, char* argv[])
           { "quiet"  , 0, 0, 'q' },
           { 0, 0, 0, 0 },
   };
-        
+  
+  /* If stdout != tty, disable colors */
+  if (!isatty(1))
+    nocolor = true;
+
   /* Save stderr unconditionally */
   stderrfd = dup(2);
 
