@@ -106,8 +106,11 @@ int main (int argc, char* argv[])
     return 0;
   }
 
-  while (optind < argc)
+  while (optind < argc) 
+  {
     process(argv[optind++], 0);
+    puts("");
+  }
     
   return 0;
 }
