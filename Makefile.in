@@ -1,8 +1,9 @@
-# $Id: Makefile.in,v 1.5 2003/09/07 06:52:18 joshk Exp $
+# $Id: Makefile.in,v 1.6 2003/09/07 08:43:08 joshk Exp $
 # Small Makefile to ease building of maildirtree
 
 # Used for make dist
 VERSION = @PACKAGE_VERSION@
+NAME    = @PACKAGE_NAME@
 exclusions = .cvsignore autogen.sh CVS
 
 # Used for compilation targets
@@ -58,16 +59,16 @@ dist: distclean
 ifeq (,$(wildcard install-sh))
 	cp -f /usr/share/automake/install-sh .
 endif
-	(cd .. && ln -sf $(CURDIR) maildirtree-$(VERSION))
-	(cd .. && tar $(addprefix --exclude ,$(exclusions)) -chzf maildirtree-$(VERSION).tar.gz maildirtree-$(VERSION))
-	rm -f ../maildirtree-$(VERSION)
+	(cd .. && ln -sf $(CURDIR) $(NAME)-$(VERSION))
+	(cd .. && tar $(addprefix --exclude ,$(exclusions)) -chzf $(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION))
+	rm -f ../$(NAME)-$(VERSION)
 	@echo; echo "Created source release $(VERSION):"; echo
-	@md5sum ../maildirtree-$(VERSION).tar.gz
+	@md5sum ../$(NAME)-$(VERSION).tar.gz
 	@echo
-	@tar tzvf ../maildirtree-$(VERSION).tar.gz
+	@tar tzvf ../$(NAME)-$(VERSION).tar.gz
 	@echo
-	rm -f ../maildirtree-$(VERSION).tar.gz.sign
-	cd .. && gpg -o maildirtree-$(VERSION).tar.gz.sign --sign -a -b maildirtree-$(VERSION).tar.gz
+	rm -f ../$(NAME)-$(VERSION).tar.gz.sign
+	cd .. && gpg -o $(NAME)-$(VERSION).tar.gz.sign --sign -a -b $(NAME)-$(VERSION).tar.gz
 	
 
 .PHONY: clean distclean install uninstall dist
