@@ -4,6 +4,7 @@ maildirtree (0.1):
 
 maildirtree (pre-0.1):
 
+  - accomodated some variable names and casts so it compiles with g++
   - added support snprintf stuff for mouldy systems without it
   - added a manpage
   - added dist target
