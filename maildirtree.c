@@ -58,7 +58,7 @@ int main (int argc, char* argv[])
       print_tree (root, -1);
 
       printf ("\n%d messages unread, %d messages total.\n",
-		      total_unread, total_read);
+		      total_unread, total_read + total_unread);
     }
     else {
       printf ("%s: %s: %s\n", argv[0], argv[1],
