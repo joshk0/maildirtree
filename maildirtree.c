@@ -53,10 +53,10 @@ static char usage [] =
 Syntax: maildirtree [opts] maildir [maildir...] \n\
 Options:\n"
 #ifdef HAVE_GETOPT_LONG
-"  -h --help\tDisplay this help message.\n\
-  -s --summary\tOnly print total counts of read and unread messages\n\
-  -n --nocolor\tDo not highlight folders that contain unread messages in white\n\
-  -q --quiet\tDo not print warning messages at all. (Same as 2>/dev/null)";
+"  -h, --help\tDisplay this help message.\n\
+  -s, --summary\tOnly print total counts of read and unread messages\n\
+  -n, --nocolor\tDo not highlight folders that contain unread messages in white\n\
+  -q, --quiet\tDo not print warning messages at all. (Same as 2>/dev/null)";
 #else
 "  -h\tDisplay this help message.\n\
   -s\tOnly print total counts of read and unread messages\n\
