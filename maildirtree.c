@@ -35,7 +35,7 @@ static unsigned int count_messages (DIR *);
 static void clean (struct Directory * root);
 
 static char usage [] =
-"Maildirtree 0.1 by Joshua Kwan\n\
+"Maildirtree 0.1 by Joshua Kwan <joshk@triplehelix.org>\n\
 Syntax: maildirtree [opts] maildir\n\
 Options:\n\
   -h --help\tDisplay this help message.\n\
