@@ -32,7 +32,7 @@
 static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
 static void process (char*, char*);
 static struct Directory * read_this_dir (DIR*, char*, int*, int*, int*);
-static void print_tree (struct Directory *, unsigned int, bool);
+static void print_tree (struct Directory *, unsigned int);
 static unsigned int count_messages (DIR *);
 static void clean (struct Directory * root);
 static inline void restore_stderr(void);
@@ -144,7 +144,7 @@ static void process (char* dir, char* fake)
          root->unread, root->read + root->unread,
          (!nocolor) ? "\033[0m" : "");
         
-      print_tree (root, -1, nocolor);
+      print_tree (root, -1);
      
       if (total_unread > 0)
         printf ("\n%d message%c unread in %d folder%c, %d messages total.\n",
@@ -359,7 +359,7 @@ create:
   i->unread = unread;
 }
 
-static void print_tree (struct Directory * start, unsigned int level, bool nc)
+static void print_tree (struct Directory * start, unsigned int level)
 {
   int j, k, l;
   struct Directory *it = start;
@@ -397,13 +397,13 @@ static void print_tree (struct Directory * start, unsigned int level, bool nc)
     }
     
     printf ("%s(%u/%u)%s\n", 
-        (start->unread > 0 && !nc) ? "\033[1m" : "",
+        (start->unread > 0 && !nocolor) ? "\033[1m" : "",
         start->unread, start->read + start->unread,
-        (!nc) ? "\033[0m" : "");
+        (!nocolor) ? "\033[0m" : "");
   }
   
   for (j = 0; j < start->count; j++)
-    print_tree (start->subdirs[j], level + 1, nc);
+    print_tree (start->subdirs[j], level + 1);
 }
 
 /* precondition: dir must have been opendir'd */
