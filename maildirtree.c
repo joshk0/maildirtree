@@ -210,6 +210,13 @@ static void process (char* dir, char* fake)
   }
 }
 
+/* read_this_dir: reads a directory, and recurses into all folders below
+ * 'd'.
+ *
+ * FIXME: Should be called many times. Many many times. Increase this
+ * recursion and make it real clean.
+ */
+
 static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* tr, int* tu)
 {
   DIR *curdir, *newdir;
