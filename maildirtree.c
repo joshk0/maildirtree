@@ -52,7 +52,7 @@ bool summary = false, nocolor = false;
 int main (int argc, char* argv[])
 {
   int opt;
-  char* cd = NULL;
+  char cd [PATH_MAX];
   struct option longopts [] = {
 	  { "help"   , 0, 0, 'h' },
 	  { "summary", 0, 0, 's' },
@@ -93,7 +93,12 @@ int main (int argc, char* argv[])
 
   if (optind >= argc)
   {
-    if ((cd = getcwd (cd, PATH_MAX)) == NULL)
+    /* Make sure we get no false positive */
+    errno = 0;
+    
+    getcwd (cd, PATH_MAX);
+    
+    if (errno != 0)
     {
       printf("maildirtree: could not get working directory: %s", strerror(errno));
       return 1;
@@ -101,8 +106,6 @@ int main (int argc, char* argv[])
     
     process(".", basename(cd));
     
-    free(cd);
-
     return 0;
   }
 
@@ -252,6 +255,10 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
         fprintf(stderr, "WARNING: %s is missing cur or new; ignoring!\n", entries->d_name);
 	if (curdir) closedir(curdir);
 	if (newdir) closedir(newdir);
+
+	free(cur);
+	free(new);
+
 	continue;
       }
       
