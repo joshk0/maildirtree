@@ -29,7 +29,7 @@
 
 static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
 static struct Directory * read_this_dir (DIR*, char*);
-static void print_tree (struct Directory *, unsigned int, STATE, bool);
+static void print_tree (struct Directory *, unsigned int);
 static unsigned int count_messages (DIR *);
 
 int main (int argc, char* argv[])
@@ -43,7 +43,8 @@ int main (int argc, char* argv[])
     
       closedir(maildir);
       
-      print_tree (root, -1, FIRST, false);
+      printf("%s (%u/%u)\n", root->name, root->unread, root->read+root->unread);
+      print_tree (root, -1);
     }
     else {
       printf ("%s: %s: %s\n", argv[0], argv[1],
@@ -77,8 +78,14 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath)
 
   root->read = (curdir != NULL) ? count_messages(curdir) : 0;
   root->unread = (newdir != NULL) ? count_messages(newdir) : 0;
+
+  if (curdir == NULL || newdir == NULL)
+    fprintf(stderr, "WARNING: %s does not look like a complete Maildir\n", rootpath);
+
   root->count = 0;
   root->subdirs = NULL;
+  root->last = true;
+  root->parent = NULL;
  
   closedir(curdir);
   closedir(newdir);
@@ -91,15 +98,11 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath)
         strcmp(entries->d_name, ".") &&
         strcmp(entries->d_name, ".."))
     {
-
       asprintf (&cur, "%s/%s/cur", rootpath, entries->d_name);
       asprintf (&new, "%s/%s/new", rootpath, entries->d_name);
 
       curdir = opendir(cur);
       newdir = opendir(new);
-
-      
-      
       
       insert_tree(root, (entries->d_name)+1,
               (curdir != NULL) ? count_messages(curdir) : 0,
@@ -155,44 +158,51 @@ static void insert_tree (struct Directory * root, char* dirName, unsigned int re
 create:
       i->subdirs = realloc (i->subdirs, sizeof(struct Directory*) * (++(i->count)));
       i->subdirs[i->count - 1] = malloc (sizeof(struct Directory));
+      i->subdirs[i->count - 1]->parent = i;
+      
+      /* There was a 'last' one before this */
+      if (i->count > 1)
+	i->subdirs[i->count - 2]->last = false;
+
       i = i->subdirs[i->count - 1];
       i->name = strdup(test);
       i->count = 0;
       i->read = read;
       i->unread = unread;
       i->subdirs = NULL;
+      i->last = true;
     }
   }
   while ((test = strtok (NULL, ".")) != NULL);
 }
 
-static void print_tree (struct Directory * start, unsigned int level, STATE s, bool isLast)
+static void print_tree (struct Directory * start, unsigned int level)
 {
   int j, l = level;
-
-  if (s != FIRST)
+  struct Directory *it = start;
+  
+  while (l-- > 0)
   {
-    while (l--)
-    {
-      int k;
-      if (!isLast)
-        putchar('|');
-      else
-        putchar(' ');
+    assert (it != NULL);
 
-      for (k = 0; k < INDENT_LEN; k++)
-        putchar(' ');
-    }
+    int k;
+      
+    if (!it->parent->last)
+      putchar('|');
+    else
+      putchar(' ');
     
-    printf("%c-- %s (%u/%u)\n", (s == LAST) ? '`' : '|', start->name, start->unread, start->read + start->unread);
+    it = it->parent;
+    
+    for (k = 0; k < INDENT_LEN; k++)
+      putchar(' ');
   }
-  else
-    printf("%s (%u/%u)\n", start->name, start->unread, start->read + start->unread);
+  
+  if (start->parent != NULL) /* Not the start entry */
+    printf("%c-- %s (%u/%u)\n", start->last ? '`' : '|', start->name, start->unread, start->read + start->unread);
   
   for (j = 0; j < start->count; j++)
-    print_tree (start->subdirs[j], level + 1,
-	    (j == start->count - 1) ? LAST : MIDDLE,
-	    (s == LAST) ? true : false);
+    print_tree (start->subdirs[j], level + 1);
 }
 
 /* precondition: dir must have been opendir'd */

@@ -6,18 +6,18 @@
 #define _GNU_SOURCE /* strdup in C99 */
 #define INDENT_LEN 3
 
+#if __STDC_VERSION__ < 199901L
+typedef enum { false = 0, true } bool;
+#endif
+
 struct Directory {
   char * name;
   struct Directory ** subdirs;
   int count;
   unsigned int unread;
   unsigned int read;
+  struct Directory * parent;
+  bool last;
 };
-
-#if __STDC_VERSION__ < 199901L
-typedef enum { false = 0, true } bool;
-#endif
-
-typedef enum { FIRST, MIDDLE, LAST } STATE;
 
 #endif /* !INCLUDED_maildirtree_h */
