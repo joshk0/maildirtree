@@ -24,7 +24,5 @@ AC_ARG_WITH(count-start,
 
 AC_DEFINE_UNQUOTED([COUNT_START], $cf_count_start, [Amount of chars to offset message count text])
 
-AC_DEFINE([_GNU_SOURCE], [Define to be able to use getopt_long in GNU])
-
 AC_CONFIG_FILES(Makefile)
 AC_OUTPUT
