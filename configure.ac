@@ -1,4 +1,4 @@
-AC_INIT([maildirtree], [0.1a])
+AC_INIT([maildirtree], [0.2])
 AC_CONFIG_HEADER(config.h)
 
 AC_PROG_INSTALL
