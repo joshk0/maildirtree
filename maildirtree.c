@@ -140,7 +140,7 @@ static void process (char* dir, char* fake)
       while (p > 0) { putchar(' '); p--; }
     
       printf ("%s(%u/%u)%s\n",
-        (root->unread > 0 && !nocolor) ? "\033[1m" : "",
+         (root->unread > 0 && !nocolor) ? "\033[1m" : "",
          root->unread, root->read + root->unread,
          (!nocolor) ? "\033[0m" : "");
         
