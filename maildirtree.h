@@ -17,6 +17,7 @@ struct Directory {
   unsigned int unread;
   unsigned int read;
   struct Directory * parent;
+  struct Directory * kid;
   bool last;
 };
 

@@ -178,21 +178,25 @@ create:
 
 static void print_tree (struct Directory * start, unsigned int level)
 {
-  int j, l = level;
+  int j, k, l;
   struct Directory *it = start;
   
-  while (l-- > 0)
+  for (l = level; l > 0; l--)
+  {
+    it->parent->kid = it;
+    it = it->parent;
+  }
+  
+  for (l = level; l > 0; l--)
   {
     assert (it != NULL);
-
-    int k;
       
-    if (!it->parent->last)
+    if (!it->last)
       putchar('|');
     else
       putchar(' ');
     
-    it = it->parent;
+    it = it->kid;
     
     for (k = 0; k < INDENT_LEN; k++)
       putchar(' ');
