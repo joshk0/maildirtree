@@ -200,7 +200,7 @@ static void process (char* dir, char* fake)
     {
       if (total_unread > 0)
       {
-	unsigned int i = 0, printed = sizeof("Unread messages in: ");
+	unsigned int i = 0, printed;
 	printf("%s: %d message%c unread in %d folder%c, %d messages total.\n",
 	    dir, total_unread,
 	    (total_unread > 1) ? 's' : 0,
@@ -208,7 +208,7 @@ static void process (char* dir, char* fake)
 	    (folders_unread > 1) ? 's' : 0,
 	    total_read + total_unread);
 	assert (unread_dirs != NULL);
-	printf ("Unread messages in: ");
+	printed = printf ("Unread messages in: ");
 	for (i = 0; i < urd_len; i++)
 	{
 	  if (printed + strlen(unread_dirs[i]) + 2 >= 80)
@@ -274,7 +274,11 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
   *tr += root->read;
   *tu += root->unread;
   
-  if (root->unread > 0) (*fu)++;
+  if (root->unread > 0)
+  {
+    (*fu)++;
+    push_back (&unread_dirs, &urd_len, root->name);
+  }
 
   if (!curdir || !newdir) /* Are we SURE this is a Maildir? */
     fprintf(stderr, "WARNING: %s does not look like a complete Maildir\n", rootpath);
