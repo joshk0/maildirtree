@@ -54,13 +54,13 @@ int main (int argc, char* argv[])
   int opt;
   char cd [PATH_MAX];
   struct option longopts [] = {
-	  { "help"   , 0, 0, 'h' },
-	  { "summary", 0, 0, 's' },
-	  { "nocolor", 0, 0, 'n' },
-	  { "quiet"  , 0, 0, 'q' },
-	  { 0, 0, 0, 0 },
+          { "help"   , 0, 0, 'h' },
+          { "summary", 0, 0, 's' },
+          { "nocolor", 0, 0, 'n' },
+          { "quiet"  , 0, 0, 'q' },
+          { 0, 0, 0, 0 },
   };
-	
+        
   /* Save stderr unconditionally */
   stderrfd = dup(2);
 
@@ -72,22 +72,23 @@ int main (int argc, char* argv[])
     {
       case 'h':
         puts(usage);
-	exit(0);
+        exit(0);
 
       case 's':
-	summary = true;
-	break;
+        summary = true;
+        break;
 
       case 'n':
-	nocolor = true;
-	break;
+        nocolor = true;
+        break;
 
       case 'q':
-	dup2(open("/dev/null", O_WRONLY), 2);
-	break;
+        dup2(open("/dev/null", O_WRONLY), 2);
+        break;
 
       case '?':
-	return 1;
+        puts(usage);
+        return 1;
     }
   }
 
@@ -100,7 +101,7 @@ int main (int argc, char* argv[])
     
     if (errno != 0)
     {
-      printf("maildirtree: could not get working directory: %s", strerror(errno));
+      printf("maildirtree: can't get working directory: %s", strerror(errno));
       return 1;
     }
     
@@ -138,7 +139,7 @@ static void process (char* dir, char* fake)
         (root->unread > 0 && !nocolor) ? "\033[1m" : "",
          root->unread, root->read + root->unread,
          (!nocolor) ? "\033[0m" : "");
-	
+        
       print_tree (root, -1, nocolor);
      
       if (total_unread > 0)
@@ -152,7 +153,7 @@ static void process (char* dir, char* fake)
         printf ("\n%d messages unread, %d messages total.\n",
              total_unread, total_read + total_unread);
     }
-		
+                
     else
     {
       if (total_unread > 0)
@@ -237,7 +238,7 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
     free (stattmp);
     
     if (S_ISDIR(isdir.st_mode) &&
-	*entries->d_name == '.' &&
+        *entries->d_name == '.' &&
         strcmp(entries->d_name, ".") &&
         strcmp(entries->d_name, ".."))
     {
@@ -253,13 +254,13 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
       if (!curdir || !newdir)
       {
         fprintf(stderr, "WARNING: %s is missing cur or new; ignoring!\n", entries->d_name);
-	if (curdir) closedir(curdir);
-	if (newdir) closedir(newdir);
+        if (curdir) closedir(curdir);
+        if (newdir) closedir(newdir);
 
-	free(cur);
-	free(new);
+        free(cur);
+        free(new);
 
-	continue;
+        continue;
       }
       
       *tr += (r = (curdir != NULL) ? count_messages(curdir) : 0);
@@ -289,7 +290,7 @@ static void insert_tree (struct Directory * root, char* dirName, unsigned int re
 {
   bool found;
   struct Directory *i = root;
-  char *test;	
+  char *test;        
   
   /* Loop on strtok until it is NULL. */
   if ((test = strtok (dirName, ".")) == NULL)
@@ -328,7 +329,7 @@ create:
       
       /* There was a 'last' one before this */
       if (i->count > 1)
-	i->subdirs[i->count - 2]->last = false;
+        i->subdirs[i->count - 2]->last = false;
 
       i = i->subdirs[i->count - 1];
       i->name = strdup(test);
@@ -381,7 +382,7 @@ static void print_tree (struct Directory * start, unsigned int level, bool nc)
   if (start->parent != NULL) /* Not the start entry */
   {
     k = COUNT_START - (level * (INDENT_LEN + 1)) -
-	    printf("%c-- %s ", start->last ? '`' : '|', start->name);
+            printf("%c-- %s ", start->last ? '`' : '|', start->name);
     
     while (k > 0)
     {
@@ -390,9 +391,9 @@ static void print_tree (struct Directory * start, unsigned int level, bool nc)
     }
     
     printf ("%s(%u/%u)%s\n", 
-	(start->unread > 0 && !nc) ? "\033[1m" : "",
-	start->unread, start->read + start->unread,
-	(!nc) ? "\033[0m" : "");
+        (start->unread > 0 && !nc) ? "\033[1m" : "",
+        start->unread, start->read + start->unread,
+        (!nc) ? "\033[0m" : "");
   }
   
   for (j = 0; j < start->count; j++)
