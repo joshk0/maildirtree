@@ -30,6 +30,7 @@
 #include <errno.h>
 
 static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
+static void process (char*, char*);
 static struct Directory * read_this_dir (DIR*, char*, int*, int*, int*);
 static void print_tree (struct Directory *, unsigned int, bool);
 static unsigned int count_messages (DIR *);
@@ -46,12 +47,12 @@ Options:\n\
   -q --quiet\tDo not print warning messages at all. (Same as 2>/dev/null)";
 
 int stderrfd;
+bool summary = false, nocolor = false;
 
 int main (int argc, char* argv[])
 {
-  DIR * maildir;
-  struct Directory * root = NULL;
-  int p, folders_unread = 0, total_read = 0, total_unread = 0, opt;
+  int opt;
+  char* cd = NULL;
   struct option longopts [] = {
 	  { "help"   , 0, 0, 'h' },
 	  { "summary", 0, 0, 's' },
@@ -59,8 +60,6 @@ int main (int argc, char* argv[])
 	  { "quiet"  , 0, 0, 'q' },
 	  { 0, 0, 0, 0 },
   };
-  
-  bool summary = false, nocolor = false;
 	
   /* Save stderr unconditionally */
   stderrfd = dup(2);
@@ -88,76 +87,89 @@ int main (int argc, char* argv[])
 	break;
 
       case '?':
-	exit(1);
+	return 1;
     }
   }
 
   if (optind >= argc)
   {
-    printf("%s: requires at least one directory argument\n", argv[0]);
-    puts(usage);
-    exit(1);
+    if ((cd = getcwd (cd, PATH_MAX)) == NULL)
+    {
+      printf("maildirtree: could not get working directory: %s", strerror(errno));
+      return 1;
+    }
+    
+    process(".", basename(cd));
+    
+    free(cd);
+
+    return 0;
   }
 
   while (optind < argc)
-  {
-    if ((maildir = opendir(argv[optind])) != NULL)
-    {
-      root = read_this_dir(maildir, argv[optind], &folders_unread, &total_read, &total_unread);
-      closedir(maildir);
-            
-      if (!summary)
-      {
-        p = COUNT_START - printf("%s ", root->name);
-        while (p > 0) { putchar(' '); p--; }
-      
-        printf ("%s(%u/%u)%s\n",
-          (root->unread > 0 && !nocolor) ? "\033[1m" : "",
-           root->unread, root->read + root->unread,
-	   (!nocolor) ? "\033[0m" : "");
-	
-        print_tree (root, -1, nocolor);
-      
-	if (total_unread > 0)
-	  printf ("\n%d message%c unread in %d folder%c, %d messages total.\n",
-               total_unread, 
-	       (total_unread > 1) ? 's' : 0,
-	       folders_unread,
-	       (folders_unread > 1) ? 's' : 0,
-	       total_read + total_unread);
-	else
-	  printf ("\n%d messages unread, %d messages total.\n",
-               total_unread, total_read + total_unread);
-      }
-		
-      else
-      {
-        if (total_unread > 0)
-          printf("%s: %d message%c unread in %d folder%c, %d messages total.\n",
-               argv[optind], total_unread,
-	       (total_unread > 1) ? 's' : 0,
-	       folders_unread,
-	       (folders_unread > 1) ? 's' : 0,
-	       total_read + total_unread);
-	else
-	  printf ("%s: %d messages unread, %d messages total.\n",
-               argv[optind], total_unread, total_read + total_unread);
-      }
-      
-      clean(root);
-      root = NULL;
-      folders_unread = total_read = total_unread = 0;
-
-      optind++;
-    }
-    else
-    {
-      printf ("%s: %s: %s\n", argv[0], argv[optind], strerror(errno));
-      exit (1);
-    }
-  }
+    process(argv[optind++], 0);
     
   return 0;
+}
+
+static void process (char* dir, char* fake)
+{
+  DIR * maildir;
+  struct Directory * root = NULL;
+  int p, folders_unread = 0, total_read = 0, total_unread = 0;
+  
+  if ((maildir = opendir(dir)) != NULL)
+  {
+    root = read_this_dir(maildir, dir, &folders_unread, &total_read, &total_unread);
+    closedir(maildir);
+            
+    if (!summary)
+    {
+      p = COUNT_START - printf("%s ", fake ? fake : root->name);
+      while (p > 0) { putchar(' '); p--; }
+    
+      printf ("%s(%u/%u)%s\n",
+        (root->unread > 0 && !nocolor) ? "\033[1m" : "",
+         root->unread, root->read + root->unread,
+         (!nocolor) ? "\033[0m" : "");
+	
+      print_tree (root, -1, nocolor);
+     
+      if (total_unread > 0)
+        printf ("\n%d message%c unread in %d folder%c, %d messages total.\n",
+             total_unread, 
+             (total_unread > 1) ? 's' : 0,
+             folders_unread,
+             (folders_unread > 1) ? 's' : 0,
+             total_read + total_unread);
+      else
+        printf ("\n%d messages unread, %d messages total.\n",
+             total_unread, total_read + total_unread);
+    }
+		
+    else
+    {
+      if (total_unread > 0)
+        printf("%s: %d message%c unread in %d folder%c, %d messages total.\n",
+             dir, total_unread,
+             (total_unread > 1) ? 's' : 0,
+             folders_unread,
+             (folders_unread > 1) ? 's' : 0,
+             total_read + total_unread);
+      else
+        printf ("%s: %d messages unread, %d messages total.\n",
+             dir, total_unread, total_read + total_unread);
+    }
+      
+    clean(root);
+    root = NULL;
+    folders_unread = total_read = total_unread = 0;
+  }
+  else
+  {
+    printf ("maildirtree: %s: %s\n", dir, strerror(errno));
+    exit (1);
+  }
 }
 
 static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* tr, int* tu)
