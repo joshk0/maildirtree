@@ -4,12 +4,6 @@
 #ifndef INCLUDED_maildirtree_h
 #define INCLUDED_maildirtree_h
 
-#define _GNU_SOURCE /* getopt_long */
-
-/* Compile time aesthetic options. */
-#define INDENT_LEN  3
-#define COUNT_START 40
-
 #if __STDC_VERSION__ < 199901L
 typedef enum { false = 0, true } bool;
 #endif

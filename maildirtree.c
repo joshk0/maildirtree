@@ -14,6 +14,8 @@
  * GNU General Public License for more details.
  */
 
+#include "config.h"
+
 #include "maildirtree.h"
 
 #include <stdlib.h>
@@ -26,7 +28,9 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 #include <errno.h>
 
 static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
@@ -40,11 +44,18 @@ static inline void restore_stderr(void);
 static char usage [] =
 "Maildirtree 0.1 by Joshua Kwan <joshk@triplehelix.org>\n\
 Syntax: maildirtree [opts] maildir [maildir...] \n\
-Options:\n\
-  -h --help\tDisplay this help message.\n\
+Options:\n"
+#ifdef HAVE_GETOPT_LONG
+"  -h --help\tDisplay this help message.\n\
   -s --summary\tOnly print total counts of read and unread messages\n\
   -n --nocolor\tDo not highlight folders that contain unread messages in white\n\
   -q --quiet\tDo not print warning messages at all. (Same as 2>/dev/null)";
+#else
+"  -h\tDisplay this help message.\n\
+  -s\tOnly print total counts of read and unread messages\n\
+  -n\tDo not highlight folders that contain unread messages in white\n\
+  -q\tDo not print warning messages at all. (Same as 2>/dev/null)";
+#endif
 
 int stderrfd;
 bool summary = false, nocolor = false;
@@ -53,6 +64,7 @@ int main (int argc, char* argv[])
 {
   int opt;
   char cd [PATH_MAX];
+#ifdef HAVE_GETOPT_LONG
   struct option longopts [] = {
           { "help"   , 0, 0, 'h' },
           { "summary", 0, 0, 's' },
@@ -60,6 +72,7 @@ int main (int argc, char* argv[])
           { "quiet"  , 0, 0, 'q' },
           { 0, 0, 0, 0 },
   };
+#endif
   
   /* If stdout != tty, disable colors */
   if (!isatty(1))
@@ -70,7 +83,11 @@ int main (int argc, char* argv[])
 
   atexit (&restore_stderr);
 
+#ifdef HAVE_GETOPT_LONG
   while ((opt = getopt_long (argc, argv, "hsnq", longopts, NULL)) != -1)
+#else
+  while ((opt = getopt (argc, argv, "hsnq")) != -1)
+#endif
   {
     switch (opt)
     {

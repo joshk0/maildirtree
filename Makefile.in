@@ -1,0 +1,29 @@
+# $Id: Makefile.in,v 1.1 2003/09/06 07:14:30 joshk Exp $
+# Small Makefile to ease building of maildirtree
+
+CC = @CC@
+CFLAGS = @CFLAGS@
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+
+maildirtree: maildirtree.c maildirtree.h config.h
+	$(CC) -O2 $(CFLAGS) maildirtree.c -o $@
+
+config.h:
+	sh configure
+
+clean:
+	rm -f *.o maildirtree core a.out
+
+distclean: clean
+	rm -f Makefile config.log config.status config.h *~
+	rm -rf autom4te.cache
+
+install: maildirtree
+	if test ! -d "$(DESTDIR)$(bindir)"; then mkdir $(DESTDIR)$(bindir); fi
+	$(INSTALL_PROGRAM) -m 755 $< $(DESTDIR)$(bindir)/
+
+uninstall:
+	rm -f $(DESTDIR)$(bindir)/maildirtree
+
+.PHONY: clean distclean install uninstall

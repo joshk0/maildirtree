@@ -1,0 +1,13 @@
+maildirtree installation instructions
+-------------------------------------
+
+It's the old configure, make and make install three-step:
+
+$ ./configure
+$ make
+$ su -c 'make install'
+
+You need nothing other than basically a full set of POSIX syscalls and a
+getopt function (getopt_long is good too!)
+
+Hope it works out :)
