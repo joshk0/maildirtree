@@ -3,6 +3,8 @@ maildirtree (0.1a):
   - Build the manual page statically when creating a release tarball.
   - Reflect these changes in INSTALL.
   - Refer to CVS repository in README.
+  - Be smart about removing maildirtree.1; if the source is there, and
+    docbook-to-man exists, it can be removed to be regenerated next build.
 
 maildirtree (0.1):
 

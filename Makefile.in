@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.10 2003/09/09 04:22:55 joshk Exp $
+# $Id: Makefile.in,v 1.11 2003/09/17 06:41:25 joshk Exp $
 # Small Makefile to ease building of maildirtree
 
 # Used for make dist
@@ -20,6 +20,7 @@ bindir		= @bindir@
 mandir		= @mandir@
 
 OBJS		= snprintf.o maildirtree.o
+DBM		= @DBM@
 
 default: all
 
@@ -29,7 +30,7 @@ maildirtree.1.gz: maildirtree.1
 	gzip -9c $< > $@
 
 maildirtree.1: $(wildcard maildirtree.1.sgml)
-	docbook-to-man $< > $@
+	$(DBM) $< > $@
 
 maildirtree: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@
@@ -45,6 +46,12 @@ config.h:
 
 clean:
 	rm -f *.o maildirtree maildirtree.1.gz core a.out
+# We can delete maildirtree.1 if we know we can build it again.
+ifneq (,$(wildcard maildirtree.1.sgml))
+ifneq (,$(DBM))
+	rm -f maildirtree.1
+endif
+endif
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h *~
