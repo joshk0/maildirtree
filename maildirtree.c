@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  */
 
-#define _GNU_SOURCE /* strdup in C99 */
+#include "maildirtree.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -26,20 +26,6 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <errno.h>
-
-struct Directory {
-  char * name;
-  struct Directory ** subdirs;
-  int count;
-};
-
-#if __STDC_VERSION__ < 199901L
-typedef enum { false = 0, true } bool;
-#endif
-
-typedef enum { FIRST, MIDDLE, LAST } STATE;
-
-static unsigned int indent_len = 3;
 
 static struct Directory * hier_sort (char** dirs, char* dirName);
 static char** read_this_dir (DIR* d);
@@ -54,13 +40,12 @@ int main (int argc, char* argv[])
   if (argc >= 2) {
     if ((maildir = opendir(argv[1])) != NULL) {
       dirs = read_this_dir(maildir);
-
+    
       closedir(maildir);
-
+      
       root = hier_sort(dirs, basename(argv[1]));
       
       print_tree (root, -1, FIRST);
-      
     }
     else {
       printf ("%s: %s: %s\n", argv[0], argv[1],
@@ -82,7 +67,8 @@ static char** read_this_dir (DIR* d)
   char ** result = NULL;
   int count = 0;
   
-  while ((entries = readdir(d)) != NULL) {
+  while ((entries = readdir(d)) != NULL)
+  {
     if (*entries->d_name == '.' &&
         strcmp(entries->d_name, ".") &&
         strcmp(entries->d_name, ".."))
@@ -175,11 +161,11 @@ static void print_tree (struct Directory * start, unsigned int level, STATE s)
     {
       int k;
       putchar('|');
-      for (k = 0; k < indent_len; k++)
+      for (k = 0; k < INDENT_LEN; k++)
         putchar(' ');
     }
     
-    printf("%c- %s\n", (s == LAST) ? '`' : '|', start->name);
+    printf("%c-- %s\n", (s == LAST) ? '`' : '|', start->name);
   }
   else
     puts(start->name);
