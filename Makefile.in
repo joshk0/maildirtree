@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.7 2003/09/07 09:16:58 joshk Exp $
+# $Id: Makefile.in,v 1.8 2003/09/07 20:26:22 joshk Exp $
 # Small Makefile to ease building of maildirtree
 
 # Used for make dist
@@ -75,8 +75,10 @@ endif
 	@echo
 	@tar tzvf ../$(NAME)-$(VERSION).tar.gz
 	@echo
-	rm -f ../$(NAME)-$(VERSION).tar.gz.sign
-	cd .. && gpg -o $(NAME)-$(VERSION).tar.gz.sign --sign -a -b $(NAME)-$(VERSION).tar.gz
+	@if test "`whoami`" = "joshk"; then \
+	  rm -f ../$(NAME)-$(VERSION).tar.gz.sign; \
+	  cd ..; \
+	  gpg -o $(NAME)-$(VERSION).tar.gz.sign --sign -a -b $(NAME)-$(VERSION).tar.gz;\
+	fi
 	
-
 .PHONY: clean distclean install uninstall dist default all
