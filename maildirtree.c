@@ -27,25 +27,23 @@
 #include <unistd.h>
 #include <errno.h>
 
-static struct Directory * hier_sort (char** dirs, char* dirName);
-static char** read_this_dir (DIR* d);
-static void print_tree (struct Directory * start, unsigned int level, STATE s);
+static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
+static struct Directory * read_this_dir (DIR*, char*);
+static void print_tree (struct Directory *, unsigned int, STATE, bool);
+static unsigned int count_messages (DIR *);
 
 int main (int argc, char* argv[])
 {
   DIR * maildir;
   struct Directory * root;
-  char ** dirs;
   
   if (argc >= 2) {
     if ((maildir = opendir(argv[1])) != NULL) {
-      dirs = read_this_dir(maildir);
+      root = read_this_dir(maildir, argv[1]);
     
       closedir(maildir);
       
-      root = hier_sort(dirs, basename(argv[1]));
-      
-      print_tree (root, -1, FIRST);
+      print_tree (root, -1, FIRST, false);
     }
     else {
       printf ("%s: %s: %s\n", argv[0], argv[1],
@@ -61,11 +59,31 @@ int main (int argc, char* argv[])
   return 0;
 }
 
-static char** read_this_dir (DIR* d)
+static struct Directory * read_this_dir (DIR* d, char* rootpath)
 {
+  DIR *curdir, *newdir;
   struct dirent *entries;
-  char ** result = NULL;
-  int count = 0;
+  struct Directory *root = malloc(sizeof(struct Directory));  
+  char *cur, *new;
+  unsigned int count = 0;
+
+  root->name = strdup(basename(rootpath));
+      
+  asprintf (&cur, "%s/cur", rootpath);
+  asprintf (&new, "%s/new", rootpath);
+
+  curdir = opendir(cur);
+  newdir = opendir(new);
+
+  root->read = (curdir != NULL) ? count_messages(curdir) : 0;
+  root->unread = (newdir != NULL) ? count_messages(newdir) : 0;
+  root->count = 0;
+  root->subdirs = NULL;
+ 
+  closedir(curdir);
+  closedir(newdir);
+
+  count = 0;
   
   while ((entries = readdir(d)) != NULL)
   {
@@ -73,85 +91,82 @@ static char** read_this_dir (DIR* d)
         strcmp(entries->d_name, ".") &&
         strcmp(entries->d_name, ".."))
     {
-      result = realloc (result, (++count)*sizeof(char**));
-      /* remove the leading dot; not used later */
-      result[count-1] = strdup ((entries->d_name)+1);
+
+      asprintf (&cur, "%s/%s/cur", rootpath, entries->d_name);
+      asprintf (&new, "%s/%s/new", rootpath, entries->d_name);
+
+      curdir = opendir(cur);
+      newdir = opendir(new);
+
+      
+      
+      
+      insert_tree(root, (entries->d_name)+1,
+              (curdir != NULL) ? count_messages(curdir) : 0,
+	      (newdir != NULL) ? count_messages(newdir) : 0);
+
+      if (curdir) closedir(curdir);
+      if (newdir) closedir(newdir);
+      
+      free(cur);
+      free(new);
     }
-  }
-
-  /* End it */
-  result = realloc (result, (++count)*sizeof(char**));
-  result[count-1] = NULL;
-  
-  return result;
-}
-
-/* hier_sort()
- * 
- * precondition: dirs points to a listing of directories in a Maildir
- * as created by read_this_dir
- * 
- * side effects: dirs will be WASTED, don't use it again; deep copy it
- * if necessary?
- */
-static struct Directory * hier_sort (char** dirs, char* dirName)
-{
-  /* Initialize an empty root entry. */
-  struct Directory *root = malloc(sizeof(struct Directory)), *i = root;
-
-  root->name = strdup(dirName);
-  root->count = 0;
-  root->subdirs = NULL;
-  
-  char *test;	
-  /* Loop on strtok until it is NULL. */
-  
-  while (*dirs != NULL)
-  {
-    test = strtok (*dirs, ".");
-
-    assert (test != NULL);
-    do
-    {
-      bool found = false;
-      /* Find it in the 'current' list, unless there are no subdirs */
-      if (i->subdirs)
-      {
-        int x;
-        for (x = 0; x < i->count; x++)
-        {
-          if (!strcmp(test, i->subdirs[x]->name)) /* FOUND IT */
-          {
-            i = i->subdirs[x];
-            found = true;
-            break;
-          }
-        }
-        if (!found)
-          goto create;
-      }
-      else /* This is our first */
-      {
-create:
-        i->subdirs = realloc (i->subdirs, sizeof(struct Directory*) * (++(i->count)));
-        i->subdirs[i->count - 1] = malloc (sizeof(struct Directory));
-        i = i->subdirs[i->count - 1];
-  
-	i->name = strdup(test);
-        i->count = 0;
-        i->subdirs = NULL;
-      }
-    }
-    while ((test = strtok (NULL, ".")) != NULL);
-    
-    dirs++;
-    i = root; /* rewind all the way back */
   }
 
   return root;
 }
 
-static void print_tree (struct Directory * start, unsigned int level, STATE s)
+/* insert_tree()
+ * 
+ * precondition: dirs points to a listing of directories in a Maildir
+ * as created by read_this_dir, and root is allocated already
+ */
+static void insert_tree (struct Directory * root, char* dirName, unsigned int read, unsigned int unread)
+{
+  struct Directory *i = root;
+  char *test;	
+  
+  /* Loop on strtok until it is NULL. */
+  test = strtok (dirName, ".");
+
+  assert (test != NULL);
+  
+  do
+  {
+    bool found = false;
+    /* Find it in the 'current' list, unless there are no subdirs */
+    if (i->subdirs)
+    {
+      int x;
+      for (x = 0; x < i->count; x++)
+      {
+        if (!strcmp(test, i->subdirs[x]->name)) /* FOUND IT */
+        {
+          i = i->subdirs[x];
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        goto create;
+    }
+    else /* This is our first */
+    {
+create:
+      i->subdirs = realloc (i->subdirs, sizeof(struct Directory*) * (++(i->count)));
+      i->subdirs[i->count - 1] = malloc (sizeof(struct Directory));
+      i = i->subdirs[i->count - 1];
+      i->name = strdup(test);
+      i->count = 0;
+      i->read = read;
+      i->unread = unread;
+      i->subdirs = NULL;
+    }
+  }
+  while ((test = strtok (NULL, ".")) != NULL);
+}
+
+static void print_tree (struct Directory * start, unsigned int level, STATE s, bool isLast)
 {
   int j, l = level;
 
@@ -160,17 +175,40 @@ static void print_tree (struct Directory * start, unsigned int level, STATE s)
     while (l--)
     {
       int k;
-      putchar('|');
+      if (!isLast)
+        putchar('|');
+      else
+        putchar(' ');
+
       for (k = 0; k < INDENT_LEN; k++)
         putchar(' ');
     }
     
-    printf("%c-- %s\n", (s == LAST) ? '`' : '|', start->name);
+    printf("%c-- %s (%u/%u)\n", (s == LAST) ? '`' : '|', start->name, start->unread, start->read + start->unread);
   }
   else
-    puts(start->name);
+    printf("%s (%u/%u)\n", start->name, start->unread, start->read + start->unread);
   
   for (j = 0; j < start->count; j++)
     print_tree (start->subdirs[j], level + 1,
-	    (j == start->count - 1) ? LAST : MIDDLE);
+	    (j == start->count - 1) ? LAST : MIDDLE,
+	    (s == LAST) ? true : false);
+}
+
+/* precondition: dir must have been opendir'd */
+static unsigned int count_messages (DIR *dir)
+{
+  unsigned int r = 0;
+  struct dirent * tmp;
+
+  while ((tmp = readdir(dir)) != NULL)
+  {
+    if (strcmp(tmp->d_name, ".") &&
+        strcmp(tmp->d_name, ".."))
+    {
+      r++;
+    } 
+  }
+
+  return r;
 }

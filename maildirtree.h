@@ -10,7 +10,8 @@ struct Directory {
   char * name;
   struct Directory ** subdirs;
   int count;
-  int messages;
+  unsigned int unread;
+  unsigned int read;
 };
 
 #if __STDC_VERSION__ < 199901L
