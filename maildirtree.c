@@ -238,9 +238,11 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
     free (stattmp);
     
     if (S_ISDIR(isdir.st_mode) &&
-        *entries->d_name == '.' &&
         strcmp(entries->d_name, ".") &&
-        strcmp(entries->d_name, ".."))
+        strcmp(entries->d_name, "..") &&
+	strcmp(entries->d_name, "cur") &&
+	strcmp(entries->d_name, "new") &&
+	strcmp(entries->d_name, "tmp"))
     {
       cur = malloc(len);
       new = malloc(len);
@@ -268,7 +270,7 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
       
       if (u > 0) (*fu)++;
       
-      insert_tree(root, (entries->d_name) + 1, r, u);
+      insert_tree(root, entries->d_name, r, u);
 
       if (curdir) closedir(curdir);
       if (newdir) closedir(newdir);
@@ -291,13 +293,13 @@ static void insert_tree (struct Directory * root, char* dirName, unsigned int re
   bool found;
   struct Directory *i = root;
   char *test;        
+
+  /* Ignore the first null token of dirName if it's leading by a dot. */
+  if (*dirName == '.')
+    dirName++;
   
   /* Loop on strtok until it is NULL. */
-  if ((test = strtok (dirName, ".")) == NULL)
-  {
-    fprintf(stderr, "WARNING: skipping bad subfolder name '%s'\n", dirName);
-    return;
-  }
+  test = strtok (dirName, ".");
 
   do
   {
