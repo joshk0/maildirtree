@@ -27,6 +27,11 @@
 #include <unistd.h>
 #include <errno.h>
 
+/* ST_ISLNK is a bonus, not in all unices. */
+#ifndef ST_ISLNK
+#define ST_ISLNK(x) 0
+#endif
+
 static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
 static struct Directory * read_this_dir (DIR*, char*, int*, int*);
 static void print_tree (struct Directory *, unsigned int);
@@ -39,34 +44,34 @@ int main (int argc, char* argv[])
   struct Directory * root;
   int p, total_read = 0, total_unread = 0;
   
-  if (argc >= 2) {
-    if ((maildir = opendir(argv[1])) != NULL) {
+  if (argc >= 2)
+  {
+    if ((maildir = opendir(argv[1])) != NULL)
+    {
       root = read_this_dir(maildir, argv[1], &total_read, &total_unread);
-    
       closedir(maildir);
       
       p = COUNT_START - printf("%s ", root->name);
-      
-      while (p > 0)
-      {
-        putchar(' ');
-        p--;
-      }
-      
-      printf ("(%u/%u)\n", root->unread, root->read+root->unread);
+      while (p > 0) { putchar(' '); p--; }
+
+      printf ("%s(%u/%u)\033[0m\n",
+        (root->unread > 0) ? "\033[1m" : "",
+	root->unread, root->read + root->unread);
       
       print_tree (root, -1);
 
       printf ("\n%d messages unread, %d messages total.\n",
 		      total_unread, total_read + total_unread);
     }
-    else {
+    else
+    {
       printf ("%s: %s: %s\n", argv[0], argv[1],
         strerror(errno));
       exit (1);
     }
   }
-  else {
+  else
+  {
     printf ("%s: must have a directory argument\n", argv[0]);
     exit (1);
   }
@@ -79,9 +84,9 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* tr, int* t
 {
   DIR *curdir, *newdir;
   struct dirent *entries;
-  struct stat curfile;
   struct Directory *root = malloc(sizeof(struct Directory));  
-  char *cur, *new;
+  struct stat isdir;
+  char *cur, *new, *stattmp;
   int count = 0, rlen, len;
   unsigned int r, u;
 
@@ -93,8 +98,8 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* tr, int* t
   cur = malloc(rlen + 5);
   new = malloc(rlen + 5);
   
-  snprintf (cur, rlen+5, "%s/cur", rootpath);
-  snprintf (new, rlen+5, "%s/new", rootpath);
+  snprintf (cur, rlen + 5, "%s/cur", rootpath);
+  snprintf (new, rlen + 5, "%s/new", rootpath);
 
   curdir = opendir(cur);
   newdir = opendir(new);
@@ -123,15 +128,18 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* tr, int* t
   
   while ((entries = readdir(d)) != NULL)
   {
-    stat (entries->d_name, &curfile);
+    len = rlen + strlen(entries->d_name) + 6;
 
-    if (S_ISDIR(curfile.st_mode) &&
+    stattmp = malloc (len - 4);
+    snprintf (stattmp, len - 4, "%s/%s", rootpath, entries->d_name);
+    stat (stattmp, &isdir);
+    free(stattmp);
+    
+    if (S_ISDIR(isdir.st_mode) &&
 	*entries->d_name == '.' &&
         strcmp(entries->d_name, ".") &&
         strcmp(entries->d_name, ".."))
     {
-      len = rlen + strlen(entries->d_name) + 6;
-
       cur = malloc(len);
       new = malloc(len);
       
@@ -280,11 +288,8 @@ static unsigned int count_messages (DIR *dir)
 
   while ((tmp = readdir(dir)) != NULL)
   {
-    if (strcmp(tmp->d_name, ".") &&
-        strcmp(tmp->d_name, ".."))
-    {
+    if (*tmp->d_name != '.') /* assuming that dotfiles != messages */
       r++;
-    } 
   }
 
   return r;
@@ -292,12 +297,13 @@ static unsigned int count_messages (DIR *dir)
 
 static void clean (struct Directory * root)
 {
-  int i;
-  
-  free(root->name);
-  
-  for (i = 0; i < root->count; i++)
-    clean(root->subdirs[i]);
+  root->count--;
+
+  while (root->count >= 0)
+  {
+    clean(root->subdirs[root->count]);
+    root->count--;
+  }
 
   free(root->subdirs);
   free(root);
