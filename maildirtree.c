@@ -95,8 +95,11 @@ static char** read_this_dir (DIR* d)
 
 static struct Directory * hier_sort (char** dirs)
 {
-	/* XXX */
-	return NULL;
+	struct Directory *dir = malloc(sizeof(struct Directory));
+
+	
+	
+	return dir;
 }
 
 static void print_tree (struct Directory * start, unsigned int level)
