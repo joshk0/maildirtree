@@ -18,3 +18,11 @@ is welcome to help out.
 
 I hope you find this program useful, but even if you don't, send me some
 feedback: joshk@triplehelix.org. Thanks!
+
+CVS
+---
+
+cvs -d :pserver:anonymous@cvs.triplehelix.org:/var/cvs co maildirtree
+
+Note that to build from CVS, you'll need docbook-to-man and autotools v2.5x
+in addition to gcc and make.

@@ -12,4 +12,5 @@ functions and a getopt function (getopt_long is even better), which should
 be available on any halfway decent *nix machine. And you need gmake, 'make'
 on all Linux systems and usually gmake otherwise.
 
-You also need docbook-to-man to produce the maildirtree.1 manual page.
+You also need docbook-to-man to produce the maildirtree.1 manual page, but
+only if you're building from CVS.

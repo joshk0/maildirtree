@@ -1,6 +1,8 @@
 maildirtree (0.1a):
 
   - Build the manual page statically when creating a release tarball.
+  - Reflect these changes in INSTALL.
+  - Refer to CVS repository in README.
 
 maildirtree (0.1):
 
