@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.6 2003/09/07 08:43:08 joshk Exp $
+# $Id: Makefile.in,v 1.7 2003/09/07 09:16:58 joshk Exp $
 # Small Makefile to ease building of maildirtree
 
 # Used for make dist
@@ -8,10 +8,12 @@ exclusions = .cvsignore autogen.sh CVS
 
 # Used for compilation targets
 CC = @CC@
-CFLAGS = @CFLAGS@ $(DEFS)
+CFLAGS = @CFLAGS@
 DEFS = -D_GNU_SOURCE
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
+
+OBJS = snprintf.o maildirtree.o
 
 # Used for installation
 prefix = @prefix@
@@ -29,8 +31,14 @@ maildirtree.1.gz: maildirtree.1
 maildirtree.1: maildirtree.1.sgml
 	docbook-to-man $< > $@
 
-maildirtree: maildirtree.c maildirtree.h config.h
-	$(CC) $(CFLAGS) maildirtree.c -o $@
+maildirtree: $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $@
+
+maildirtree.o: maildirtree.c config.h maildirtree.h snprintf.h
+snprintf.o: snprintf.c config.h snprintf.h
+
+%.o: %.c
+	$(CC) -c $(CFLAGS) $(DEFS) $< -o $@
 
 config.h:
 	sh configure
@@ -71,4 +79,4 @@ endif
 	cd .. && gpg -o $(NAME)-$(VERSION).tar.gz.sign --sign -a -b $(NAME)-$(VERSION).tar.gz
 	
 
-.PHONY: clean distclean install uninstall dist
+.PHONY: clean distclean install uninstall dist default all
