@@ -8,7 +8,8 @@
 typedef enum { false = 0, true } bool;
 #endif
 
-struct Directory {
+struct Directory
+{
   char * name;
   struct Directory ** subdirs;
   int count;

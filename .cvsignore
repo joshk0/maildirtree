@@ -3,3 +3,4 @@ config.h
 config.log
 autom4te.cache
 Makefile
+maildirtree

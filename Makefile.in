@@ -1,5 +1,8 @@
-# $Id: Makefile.in,v 1.1 2003/09/06 07:14:30 joshk Exp $
+# $Id: Makefile.in,v 1.2 2003/09/07 01:56:53 joshk Exp $
 # Small Makefile to ease building of maildirtree
+
+# Used for make dist
+VERSION = @PACKAGE_VERSION@
 
 CC = @CC@
 CFLAGS = @CFLAGS@
@@ -7,7 +10,7 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 
 maildirtree: maildirtree.c maildirtree.h config.h
-	$(CC) -O2 $(CFLAGS) maildirtree.c -o $@
+	$(CC) $(CFLAGS) maildirtree.c -o $@
 
 config.h:
 	sh configure
@@ -26,4 +29,12 @@ install: maildirtree
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/maildirtree
 
-.PHONY: clean distclean install uninstall
+dist: distclean
+	autoheader
+	autoconf
+	rm -rf autom4te.cache *~
+	(cd .. && ln -sf $(CURDIR) maildirtree-$(VERSION))
+	(cd .. && tar --exclude CVS --exclude .cvsignore -chzf maildirtree-$(VERSION).tar.gz maildirtree-$(VERSION))
+	rm -f ../maildirtree-$(VERSION)	
+
+.PHONY: clean distclean install uninstall dist

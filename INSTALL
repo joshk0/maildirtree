@@ -7,7 +7,10 @@ $ ./configure
 $ make
 $ su -c 'make install'
 
-You need nothing other than basically a full set of POSIX syscalls and a
-getopt function (getopt_long is good too!)
+You need nothing other than basically a full set of file manipulation
+functions and a getopt function (getopt_long is even better), which should
+be available on any halfway decent *nix machine.
+
+You also need docbook-to-man to produce the maildirtree.1 manual page.
 
 Hope it works out :)
