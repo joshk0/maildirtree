@@ -17,7 +17,7 @@ struct Directory
   unsigned int read;
   struct Directory * parent;
   struct Directory * kid;
-  bool last;
+  bool last, dummy;
 };
 
 #endif /* !INCLUDED_maildirtree_h */

@@ -420,6 +420,7 @@ create:
       
       i->read = 0;
       i->unread = 0;
+      i->dummy = true;
       
       i->subdirs = NULL;
       i->last = true;
@@ -430,6 +431,7 @@ create:
   /* This is only valid on the innermost node */
   i->read = read;
   i->unread = unread;
+  i->dummy = false;
 }
 
 static void print_tree (struct Directory * start, int level)
@@ -473,17 +475,22 @@ static void print_tree (struct Directory * start, int level)
             printf("%c-- %s ", start->last ? '`' : '|', start->name);
     
     /* Actually print the spaces. */
-    while (k > 0)
+    if (!start->dummy)
     {
-      putchar(' ');
-      k--;
-    }
+      while (k > 0)
+      {
+        putchar(' ');
+        k--;
+      }
     
     /* Unread/total message count */
-    printf ("%s(%u/%u)%s\n", 
-        (start->unread > 0 && !nocolor) ? "\033[1m" : "",
-        start->unread, start->read + start->unread,
-        (!nocolor) ? "\033[0m" : "");
+      printf ("%s(%u/%u)%s\n", 
+          (start->unread > 0 && !nocolor) ? "\033[1m" : "",
+          start->unread, start->read + start->unread,
+          (!nocolor) ? "\033[0m" : "");
+    }
+    else
+      puts("");
   }
   
   for (j = 0; j < start->count; j++)
