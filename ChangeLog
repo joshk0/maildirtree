@@ -1,4 +1,8 @@
-maildirtree (0.1a):
+maildirtree (0.2):
+
+  - Fix the build on FreeBSD.
+
+maildirtree (0.1a, never officially released):
 
   - Build the manual page statically when creating a release tarball.
   - Reflect these changes in INSTALL.
