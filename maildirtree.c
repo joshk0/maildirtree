@@ -27,13 +27,13 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 /* Special headers that aren't always available. */
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#include <errno.h>
 
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>
