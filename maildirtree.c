@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -29,7 +30,7 @@
 struct Directory {
   char * name;
   struct Directory ** subdirs;
-  int last_subdir_index;
+  int count;
 };
 
 #if __STDC_VERSION__ < 199901L
@@ -39,8 +40,7 @@ typedef enum { false = 0, true } bool;
 static const char indent [] = "   ";
 static unsigned int indentlen = 3;
 
-static struct Directory * find_subdirs (struct Directory * subdir, char* token);
-static struct Directory * hier_sort (char** dirs);
+static struct Directory * hier_sort (char** dirs, char* dirName);
 static char** read_this_dir (DIR* d);
 static void print_tree (struct Directory * start, unsigned int level);
 
@@ -54,15 +54,9 @@ int main (int argc, char* argv[])
     if ((maildir = opendir(argv[1])) != NULL) {
       dirs = read_this_dir(maildir);
 
-      /* debug */
-      while (dirs != NULL && *dirs != NULL) {
-        puts (*dirs);
-        dirs++;
-      }
-      
       closedir(maildir);
 
-      root = hier_sort(dirs);
+      root = hier_sort(dirs, basename(argv[1]));
       
       print_tree (root, 0);
       
@@ -93,13 +87,15 @@ static char** read_this_dir (DIR* d)
         strcmp(entries->d_name, ".."))
     {
       result = realloc (result, (++count)*sizeof(char**));
-      result[count-1] = malloc (entries->d_reclen + 1);
       /* remove the leading dot; not used later */
       result[count-1] = strdup ((entries->d_name)+1);
     }
   }
 
-  result[count] = NULL;
+  /* End it */
+  result = realloc (result, (++count)*sizeof(char**));
+  result[count-1] = NULL;
+  
   return result;
 }
 
@@ -111,58 +107,66 @@ static char** read_this_dir (DIR* d)
  * side effects: dirs will be WASTED, don't use it again; deep copy it
  * if necessary?
  */
-static struct Directory * hier_sort (char** dirs)
+static struct Directory * hier_sort (char** dirs, char* dirName)
 {
-  struct Directory *dir = malloc(sizeof(struct Directory)), *root = dir;
-  struct Directory *sub = NULL;
-  
-  dir->name = NULL;
-  dir->subdirs = NULL;
-  dir->last_subdir_index = -1;
-  
-  char *tokens;
+  /* Initialize an empty root entry. */
+  struct Directory *root = malloc(sizeof(struct Directory)), *i = root;
 
+  root->name = strdup(dirName);
+  root->count = 0;
+  root->subdirs = NULL;
+  
+  char *test;	
+  /* Loop on strtok until it is NULL. */
+  
   while (*dirs != NULL)
-  {	  
-    /* This must not be null initially due to read_this_dir filtering */
-    for (; tokens != NULL; tokens = strtok(*dirs, "."))
+  {
+    test = strtok (*dirs, ".");
+
+    assert (test != NULL);
+    do
     {
-      if (dir->subdirs != NULL && (sub = find_subdirs(dir, tokens)) != NULL)
+      bool found = false;
+      /* Find it in the 'current' list, unless there are no subdirs */
+      if (i->subdirs)
       {
-        dir = sub;
-	
-	sub->subdirs[++(sub->last_subdir_index)] = malloc(sizeof(struct Directory));
-	sub->subdirs[sub->last_subdir_index]->name = tokens;
+        int x;
+        for (x = 0; x < i->count; x++)
+        {
+          if (!strcmp(test, i->subdirs[x]->name)) /* FOUND IT */
+          {
+            i = i->subdirs[x];
+            found = true;
+            break;
+          }
+        }
+        if (!found)
+          goto create;
       }
-      else /* create the subdir */
+      else /* This is our first */
       {
-        dir->subdirs[++(dir->last_subdir_index)] = malloc(sizeof(struct Directory));
-        dir->subdirs[dir->last_subdir_index]->name = tokens;
+create:
+        i->subdirs = realloc (i->subdirs, sizeof(struct Directory*) * (++(i->count)));
+        i->subdirs[i->count - 1] = malloc (sizeof(struct Directory));
+        i = i->subdirs[i->count - 1];
+  
+	i->name = strdup(test);
+        i->count = 0;
+        i->subdirs = NULL;
       }
     }
-
-    dir = root;
+    while ((test = strtok (NULL, ".")) != NULL);
+    
+    dirs++;
+    i = root; /* rewind all the way back */
   }
   
-  return dir;
-}
-
-static struct Directory * find_subdirs (struct Directory * dir, char* token)
-{
-  int i;
-  struct Directory **subdir = dir->subdirs;
-  
-  for (i = 0; i <= dir->last_subdir_index; i++)
-  {
-    assert(subdir[i] != NULL);
-    if (!strcmp(subdir[i]->name, token))
-      return subdir[i];
-  }
-  return NULL;
+  exit (1);
 }
 
 static void print_tree (struct Directory * start, unsigned int level)
 {
+  return;
   char* in = (level == 0) ? "" : malloc ((level * indentlen) + 1);
   unsigned char bar;
   unsigned int i;
