@@ -1,25 +1,25 @@
-# $Id: Makefile.in,v 1.8 2003/09/07 20:26:22 joshk Exp $
+# $Id: Makefile.in,v 1.9 2003/09/09 00:44:09 joshk Exp $
 # Small Makefile to ease building of maildirtree
 
 # Used for make dist
-VERSION = @PACKAGE_VERSION@
-NAME    = @PACKAGE_NAME@
-exclusions = .cvsignore autogen.sh CVS
+VERSION		= @PACKAGE_VERSION@
+NAME		= @PACKAGE_NAME@
+exclusions	= .cvsignore autogen.sh CVS maildirtree.1.sgml
 
 # Used for compilation targets
-CC = @CC@
-CFLAGS = @CFLAGS@
-DEFS = -D_GNU_SOURCE
-INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-
-OBJS = snprintf.o maildirtree.o
+CC		= @CC@
+CFLAGS		= @CFLAGS@
+DEFS		= -D_GNU_SOURCE
+INSTALL		= @INSTALL@
+INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 
 # Used for installation
-prefix = @prefix@
-exec_prefix = @exec_prefix@
-bindir = @bindir@
-mandir = @mandir@
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+bindir		= @bindir@
+mandir		= @mandir@
+
+OBJS		= snprintf.o maildirtree.o
 
 default: all
 
@@ -28,7 +28,7 @@ all: maildirtree maildirtree.1.gz
 maildirtree.1.gz: maildirtree.1
 	gzip -9c $< > $@
 
-maildirtree.1: maildirtree.1.sgml
+maildirtree.1: $(wildcard maildirtree.1.sgml)
 	docbook-to-man $< > $@
 
 maildirtree: $(OBJS)
@@ -44,7 +44,7 @@ config.h:
 	sh configure
 
 clean:
-	rm -f *.o maildirtree maildirtree.1 maildirtree.1.gz core a.out
+	rm -f *.o maildirtree maildirtree.1.gz core a.out
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h *~
@@ -67,6 +67,7 @@ dist: distclean
 ifeq (,$(wildcard install-sh))
 	cp -f /usr/share/automake/install-sh .
 endif
+	docbook-to-man maildirtree.1.sgml > maildirtree.1
 	(cd .. && ln -sf $(CURDIR) $(NAME)-$(VERSION))
 	(cd .. && tar $(addprefix --exclude ,$(exclusions)) -chzf $(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION))
 	rm -f ../$(NAME)-$(VERSION)
@@ -80,5 +81,6 @@ endif
 	  cd ..; \
 	  gpg -o $(NAME)-$(VERSION).tar.gz.sign --sign -a -b $(NAME)-$(VERSION).tar.gz;\
 	fi
+	rm -f maildirtree.1
 	
 .PHONY: clean distclean install uninstall dist default all

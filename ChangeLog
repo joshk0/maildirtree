@@ -1,3 +1,7 @@
+maildirtree (0.1a):
+
+  - Build the manual page statically when creating a release tarball.
+
 maildirtree (0.1):
 
   - First release!
