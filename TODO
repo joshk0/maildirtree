@@ -1,5 +1,5 @@
-maildirtree
------------
+maildirtree's TODO list
+-----------------------
 
 - Perfect the recursion for read_this_dir.
 - Allow reading of all folders that contain new/ and cur/ at least, and ignore
