@@ -25,53 +25,106 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <errno.h>
 
 static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
 static struct Directory * read_this_dir (DIR*, char*, int*, int*);
-static void print_tree (struct Directory *, unsigned int);
+static void print_tree (struct Directory *, unsigned int, bool);
 static unsigned int count_messages (DIR *);
 static void clean (struct Directory * root);
+
+static char usage [] =
+"Maildirtree 0.1 by Joshua Kwan\n\
+Syntax: maildirtree [opts] maildir\n\
+Options:\n\
+  -h --help\tDisplay this help message.\n\
+  -s --summary\tOnly print total counts of read and unread messages\n\
+  -n --nocolor\tDo not highlight folders that contain unread messages in white\n";
+  
 
 int main (int argc, char* argv[])
 {
   DIR * maildir;
-  struct Directory * root;
-  int p, total_read = 0, total_unread = 0;
+  struct Directory * root = NULL;
+  int p, total_read = 0, total_unread = 0, opt;
+  struct option longopts [] = {
+	  { "help"   , 0, 0, 'h' },
+	  { "summary", 0, 0, 's' },
+	  { "nocolor", 0, 0, 'n' },
+	  { 0, 0, 0, 0 },
+  };
   
-  if (argc >= 2)
+  bool summary = false, nocolor = false;
+  
+  while ((opt = getopt_long (argc, argv, "hsn", longopts, NULL)) != -1)
   {
-    if ((maildir = opendir(argv[1])) != NULL)
+    switch (opt)
     {
-      root = read_this_dir(maildir, argv[1], &total_read, &total_unread);
+      case 'h':
+        puts(usage);
+	exit(0);
+
+      case 's':
+	summary = true;
+	break;
+
+      case 'n':
+	nocolor = true;
+	break;
+
+      case '?':
+	exit(1);
+    }
+  }
+
+  if (optind >= argc)
+  {
+    printf("%s: requires at least one directory argument\n", argv[0]);
+    exit(1);
+  }
+
+  while (optind < argc)
+  {
+    if ((maildir = opendir(argv[optind])) != NULL)
+    {
+      root = read_this_dir(maildir, argv[optind], &total_read, &total_unread);
       closedir(maildir);
+            
+      if (!summary)
+      {
+        p = COUNT_START - printf("%s ", root->name);
+        while (p > 0) { putchar(' '); p--; }
       
-      p = COUNT_START - printf("%s ", root->name);
-      while (p > 0) { putchar(' '); p--; }
-
-      printf ("%s(%u/%u)\033[0m\n",
-        (root->unread > 0) ? "\033[1m" : "",
-	root->unread, root->read + root->unread);
+        printf ("%s(%u/%u)%s\n",
+          (root->unread > 0 && !nocolor) ? "\033[1m" : "",
+           root->unread, root->read + root->unread,
+	   (!nocolor) ? "\033[0m" : "");
+	
+        print_tree (root, -1, nocolor);
       
-      print_tree (root, -1);
+	printf ("\n%d messages unread, %d messages total.\n",
+               total_unread, total_read + total_unread);
+      }
+      else
+      {
+        printf ("%s: %d messages unread, %d messages total.\n",
+               argv[optind], total_unread, total_read + total_unread);
+      }
+      
+      clean(root);
+      root = NULL;
+      total_read = total_unread = 0;
 
-      printf ("\n%d messages unread, %d messages total.\n",
-		      total_unread, total_read + total_unread);
+      optind++;
     }
     else
     {
-      printf ("%s: %s: %s\n", argv[0], argv[1],
-        strerror(errno));
+      printf ("%s: %s: %s\n", argv[0], argv[optind], strerror(errno));
       exit (1);
     }
   }
-  else
-  {
-    printf ("%s: must have a directory argument\n", argv[0]);
-    exit (1);
-  }
-
-  clean(root);
+    
   return 0;
 }
 
@@ -113,11 +166,11 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* tr, int* t
   root->last    = true;
   root->parent  = NULL;
  
-  closedir(curdir);
-  closedir(newdir);
+  closedir (curdir);
+  closedir (newdir);
 
-  free(cur);
-  free(new);
+  free (cur);
+  free (new);
 
   count = 0;
   
@@ -128,7 +181,7 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* tr, int* t
     stattmp = malloc (len - 4);
     snprintf (stattmp, len - 4, "%s/%s", rootpath, entries->d_name);
     stat (stattmp, &isdir);
-    free(stattmp);
+    free (stattmp);
     
     if (S_ISDIR(isdir.st_mode) &&
 	*entries->d_name == '.' &&
@@ -172,10 +225,12 @@ static void insert_tree (struct Directory * root, char* dirName, unsigned int re
   char *test;	
   
   /* Loop on strtok until it is NULL. */
-  test = strtok (dirName, ".");
+  if ((test = strtok (dirName, ".")) == NULL)
+  {
+    fprintf(stderr, "WARNING: skipping bad subfolder name '%s'\n", dirName);
+    return;
+  }
 
-  assert (test != NULL);
-  
   do
   {
     found = false;
@@ -230,7 +285,7 @@ create:
   i->unread = unread;
 }
 
-static void print_tree (struct Directory * start, unsigned int level)
+static void print_tree (struct Directory * start, unsigned int level, bool nc)
 {
   int j, k, l;
   struct Directory *it = start;
@@ -267,12 +322,14 @@ static void print_tree (struct Directory * start, unsigned int level)
       k--;
     }
     
-    printf ("%s(%u/%u)\033[0m\n", 
-	(start->unread > 0) ? "\033[1m" : "", start->unread, start->read + start->unread);
+    printf ("%s(%u/%u)%s\n", 
+	(start->unread > 0 && !nc) ? "\033[1m" : "",
+	start->unread, start->read + start->unread,
+	(!nc) ? "\033[0m" : "");
   }
   
   for (j = 0; j < start->count; j++)
-    print_tree (start->subdirs[j], level + 1);
+    print_tree (start->subdirs[j], level + 1, nc);
 }
 
 /* precondition: dir must have been opendir'd */
@@ -301,5 +358,6 @@ static void clean (struct Directory * root)
   }
 
   free(root->subdirs);
+  free(root->name);
   free(root);
 }
