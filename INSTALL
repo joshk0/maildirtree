@@ -9,8 +9,7 @@ $ su -c 'make install'
 
 You need nothing other than basically a full set of file manipulation
 functions and a getopt function (getopt_long is even better), which should
-be available on any halfway decent *nix machine.
+be available on any halfway decent *nix machine. And you need gmake, 'make'
+on all Linux systems and usually gmake otherwise.
 
 You also need docbook-to-man to produce the maildirtree.1 manual page.
-
-Hope it works out :)
