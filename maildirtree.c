@@ -27,11 +27,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-/* ST_ISLNK is a bonus, not in all unices. */
-#ifndef ST_ISLNK
-#define ST_ISLNK(x) 0
-#endif
-
 static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
 static struct Directory * read_this_dir (DIR*, char*, int*, int*);
 static void print_tree (struct Directory *, unsigned int);
