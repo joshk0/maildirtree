@@ -136,26 +136,36 @@ static void process (char* dir, char* fake)
             
     if (!summary)
     {
+      /* First we print the root entry manually... */
+	    
+      /* indentation of the unread message count, and printf basically returns
+       * strlen(fake) + 1 (or strlen(root->name) if that's the case) */
       p = COUNT_START - printf("%s ", fake ? fake : root->name);
       while (p > 0) { putchar(' '); p--; }
     
+      /* Unread message count */
       printf ("%s(%u/%u)%s\n",
          (root->unread > 0 && !nocolor) ? "\033[1m" : "",
          root->unread, root->read + root->unread,
          (!nocolor) ? "\033[0m" : "");
-        
+      
+      /* Print the rest of the children */
       print_tree (root, -1);
      
       if (total_unread > 0)
+      {
         printf ("\n%d message%c unread in %d folder%c, %d messages total.\n",
              total_unread, 
              (total_unread > 1) ? 's' : 0,
              folders_unread,
              (folders_unread > 1) ? 's' : 0,
              total_read + total_unread);
+      }
       else
+      {
         printf ("\n%d messages unread, %d messages total.\n",
              total_unread, total_read + total_unread);
+      }
     }
                 
     else
@@ -268,7 +278,9 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
 
         continue;
       }
-      
+     
+      /* Assign to r and u the unread message counts for *THIS* folder, 
+       * add it to the totals. */
       *tr += (r = (curdir != NULL) ? count_messages(curdir) : 0);
       *tu += (u = (newdir != NULL) ? count_messages(newdir) : 0);
       
@@ -291,6 +303,9 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
  * 
  * precondition: dirs points to a listing of directories in a Maildir
  * as created by read_this_dir, and root is allocated already
+ *
+ * FIXME: detection for .Foo.Bar where .Foo does not exist; set a flag
+ * to not print message count which is 0/0
  */
 static void insert_tree (struct Directory * root, char* dirName, unsigned int read, unsigned int unread)
 {
@@ -364,6 +379,14 @@ static void print_tree (struct Directory * start, unsigned int level)
   int j, k, l;
   struct Directory *it = start;
   
+  /* This is a little messy but works. Basically we need to look from the
+   * root down to see whether we should print additional pipes for those
+   * levels, not from the bottom up as our data structure mandates. 
+   *
+   * EXPECT KID TO GET CLOBBERED! DO NOT RELY ON IT FOR MULTIPLE
+   * CALLS OF THIS FUNCTION! CAVEAT EMPTOR! ACHTUNG! ATTENTION!
+   */
+  
   for (l = level; l > 0; l--)
   {
     it->parent->kid = it;
@@ -373,12 +396,9 @@ static void print_tree (struct Directory * start, unsigned int level)
   for (l = level; l > 0; l--)
   {
     assert (it != NULL);
-      
-    if (!it->last)
-      putchar('|');
-    else
-      putchar(' ');
-    
+    putchar ( !it->last ? '|' : ' ' );
+
+    /* Move down into our temporary top-down hierarchy */
     it = it->kid;
     
     for (j = 0; j < INDENT_LEN; j++)
@@ -387,15 +407,21 @@ static void print_tree (struct Directory * start, unsigned int level)
   
   if (start->parent != NULL) /* Not the start entry */
   {
+    /* We've already printed INDENT_LEN + 1 number of spaces,
+     * the tree 'graphic' + the name; offset the COUNT_START by this
+     * to align correctly. */
+	  
     k = COUNT_START - (level * (INDENT_LEN + 1)) -
             printf("%c-- %s ", start->last ? '`' : '|', start->name);
     
+    /* Actually print the spaces. */
     while (k > 0)
     {
       putchar(' ');
       k--;
     }
     
+    /* Unread/total message count */
     printf ("%s(%u/%u)%s\n", 
         (start->unread > 0 && !nocolor) ? "\033[1m" : "",
         start->unread, start->read + start->unread,
@@ -431,6 +457,8 @@ static void clean (struct Directory * root)
     root->count--;
   }
 
+  assert (root->count == -1);
+  
   free(root->subdirs);
   free(root->name);
   free(root);
