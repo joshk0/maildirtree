@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.3 2003/09/07 02:07:23 joshk Exp $
+# $Id: Makefile.in,v 1.4 2003/09/07 02:21:17 joshk Exp $
 # Small Makefile to ease building of maildirtree
 
 # Used for make dist
@@ -34,8 +34,19 @@ dist: distclean
 	autoheader
 	autoconf
 	rm -rf autom4te.cache *~
+ifeq (,$(wildcard install-sh))
+	cp -f /usr/share/automake/install-sh .
+endif
 	(cd .. && ln -sf $(CURDIR) maildirtree-$(VERSION))
 	(cd .. && tar $(addprefix --exclude ,$(exclusions)) -chzf maildirtree-$(VERSION).tar.gz maildirtree-$(VERSION))
-	rm -f ../maildirtree-$(VERSION)	
+	rm -f ../maildirtree-$(VERSION)
+	@echo; echo "Created source release $(VERSION):"; echo
+	@md5sum ../maildirtree-$(VERSION).tar.gz
+	@echo
+	@tar tzvf ../maildirtree-$(VERSION).tar.gz
+	@echo
+	rm -f ../maildirtree-$(VERSION).tar.gz.sign
+	cd .. && gpg -o maildirtree-$(VERSION).tar.gz.sign --sign -a -b maildirtree-$(VERSION).tar.gz
+	
 
 .PHONY: clean distclean install uninstall dist
