@@ -1,5 +1,9 @@
 config.status
 config.h
+config.h.in
+config.h.in~
+configure
+install-sh
 config.log
 autom4te.cache
 Makefile
