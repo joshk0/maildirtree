@@ -2,3 +2,6 @@ maildirtree
 -----------
 
 - Perfect the recursion for read_this_dir.
+- Allow reading of all folders that contain new/ and cur/ at least, and ignore
+  the rest. May be necessary to have a 'Courier mode' and a 'Hierarchial mode'
+  for maildir directory structures that do not use the dot style.
