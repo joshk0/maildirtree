@@ -4,7 +4,7 @@
 # Used for make dist
 VERSION		= @PACKAGE_VERSION@
 NAME		= @PACKAGE_NAME@
-exclusions	= .cvsignore autogen.sh CVS maildirtree.1.sgml
+exclusions	= .cvsignore autogen.sh CVS maildirtree.1.sgml .svn
 
 # Used for compilation targets
 CC		= @CC@
