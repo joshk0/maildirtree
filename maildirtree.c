@@ -27,12 +27,12 @@ struct Directory {
 	char* name;
 	struct Directory ** subdirs;
 	char** contents;
-}
+};
 
-static char indent [] = "   ";
+static const char indent [] = "   ";
 static unsigned int indentlen = 3;
 
-static Directory * hier_sort (char** dirs);
+static struct Directory * hier_sort (char** dirs);
 static char** read_this_dir (DIR* d);
 static void print_tree (struct Directory * start, unsigned int level);
 
@@ -56,7 +56,7 @@ int main (int argc, char* argv[])
 
 			root = hier_sort(dirs);
 			
-			print_tree (root);
+			print_tree (root, 0);
 			
 		}
 		else {
@@ -93,7 +93,7 @@ static char** read_this_dir (DIR* d)
 	return result;
 }
 
-static Directory * hier_sort (char** dirs)
+static struct Directory * hier_sort (char** dirs)
 {
 	/* XXX */
 	return NULL;
@@ -110,8 +110,8 @@ static void print_tree (struct Directory * start, unsigned int level)
 	
 	while (start->subdirs != NULL) {
 		bar = ((start->subdirs)+1 == NULL) ? '`' : '|';
-		printf("%s%c %s\n", indent, bar, *(start->subdirs)->name);
-		print_tree (start->subdirs++, level + 1);
+		printf("%s%c %s\n", indent, bar, (*(start->subdirs))->name);
+		print_tree (*(start->subdirs++), level + 1);
 	}
 	
 	while (start->contents != NULL) {
