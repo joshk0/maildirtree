@@ -1,6 +1,7 @@
 maildirtree (0.5):
 
   - Cosmetic fixes for help output.
+  - Display folders in which unread messages exist when in summary mode.
 
 maildirtree (0.2):
 

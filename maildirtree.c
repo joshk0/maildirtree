@@ -47,6 +47,7 @@ static void print_tree (struct Directory *, int);
 static unsigned int count_messages (DIR *);
 static void clean (struct Directory * root);
 static inline void restore_stderr(void);
+static void push_back (char*** array, size_t *curlen, char* string);
 
 static char usage [] =
 "Maildirtree " PACKAGE_VERSION " by Joshua Kwan <joshk@triplehelix.org>\n\
@@ -66,6 +67,8 @@ Options:\n"
 
 int stderrfd;
 bool summary = false, nocolor = false;
+char** unread_dirs = NULL;
+size_t urd_len = 0;
 
 int main (int argc, char* argv[])
 {
@@ -178,6 +181,7 @@ static void process (char* dir, char* fake)
      
       if (total_unread > 0)
       {
+	
         printf ("\n%d message%c unread in %d folder%c, %d messages total.\n",
              total_unread, 
              (total_unread > 1) ? 's' : 0,
@@ -195,12 +199,27 @@ static void process (char* dir, char* fake)
     else
     {
       if (total_unread > 0)
-        printf("%s: %d message%c unread in %d folder%c, %d messages total.\n",
-             dir, total_unread,
-             (total_unread > 1) ? 's' : 0,
-             folders_unread,
-             (folders_unread > 1) ? 's' : 0,
-             total_read + total_unread);
+      {
+	unsigned int i = 0, printed = sizeof("Unread messages in: ");
+	printf("%s: %d message%c unread in %d folder%c, %d messages total.\n",
+	    dir, total_unread,
+	    (total_unread > 1) ? 's' : 0,
+	    folders_unread,
+	    (folders_unread > 1) ? 's' : 0,
+	    total_read + total_unread);
+	assert (unread_dirs != NULL);
+	printf ("Unread messages in: ");
+	for (i = 0; i < urd_len; i++)
+	{
+	  if (printed + strlen(unread_dirs[i]) + 2 >= 80)
+	  {
+	    printf("\n");
+	    printed = 0;
+	  }
+	  printed += printf("%s%s", unread_dirs[i],
+	      i == urd_len - 1 ? "" : ", ");
+	}
+      }
       else
         printf ("%s: %d messages unread, %d messages total.\n",
              dir, total_unread, total_read + total_unread);
@@ -315,7 +334,11 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
       *tr += (r = (curdir != NULL) ? count_messages(curdir) : 0);
       *tu += (u = (newdir != NULL) ? count_messages(newdir) : 0);
       
-      if (u > 0) (*fu)++;
+      if (u > 0)
+      {
+	(*fu)++;
+	push_back(&unread_dirs, &urd_len, entries->d_name);
+      }
       
       insert_tree(root, entries->d_name, r, u);
 
@@ -498,4 +521,26 @@ static void clean (struct Directory * root)
 static inline void restore_stderr(void)
 {
   dup2(stderrfd, 2);
+}
+
+static void push_back (char*** array, size_t *curlen, char* string)
+{
+  char* ptr = NULL;
+  
+  if (array == NULL)
+    (*array) = malloc(sizeof(char*));
+  else
+    (*array) = realloc(*array, sizeof(char*) * (*curlen + 1));
+
+  /* Kill the annoying leading . */
+  if (*string == '.')
+    string++;
+  
+  (*array)[*curlen] = strdup(string);
+  
+  /* change into a more legible format */
+  while ((ptr = strchr((*array)[*curlen], '.')) != NULL)
+    *ptr = '/';
+
+  (*curlen)++;
 }
