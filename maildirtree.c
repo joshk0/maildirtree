@@ -31,6 +31,7 @@ static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
 static struct Directory * read_this_dir (DIR*, char*);
 static void print_tree (struct Directory *, unsigned int);
 static unsigned int count_messages (DIR *);
+static void clean (struct Directory * root);
 
 int main (int argc, char* argv[])
 {
@@ -57,6 +58,7 @@ int main (int argc, char* argv[])
     exit (1);
   }
 
+  clean(root);
   return 0;
 }
 
@@ -89,6 +91,9 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath)
  
   closedir(curdir);
   closedir(newdir);
+
+  free(cur);
+  free(new);
 
   count = 0;
   
@@ -225,4 +230,17 @@ static unsigned int count_messages (DIR *dir)
   }
 
   return r;
+}
+
+static void clean (struct Directory * root)
+{
+  int i;
+  
+  free(root->name);
+  
+  for (i = 0; i < root->count; i++)
+    clean(root->subdirs[i]);
+
+  free(root->subdirs);
+  free(root);
 }
