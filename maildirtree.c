@@ -27,9 +27,9 @@
 #include <errno.h>
 
 struct Directory {
-  char * name = NULL;
-  struct Directory ** subdirs = NULL;
-  int last_subdir_index = 0;
+  char * name;
+  struct Directory ** subdirs;
+  int last_subdir_index;
 };
 
 #if __STDC_VERSION__ < 199901L
@@ -99,6 +99,7 @@ static char** read_this_dir (DIR* d)
     }
   }
 
+  result[count] = NULL;
   return result;
 }
 
@@ -115,7 +116,9 @@ static struct Directory * hier_sort (char** dirs)
   struct Directory *dir = malloc(sizeof(struct Directory)), *root = dir;
   struct Directory *sub = NULL;
   
+  dir->name = NULL;
   dir->subdirs = NULL;
+  dir->last_subdir_index = -1;
   
   char *tokens;
 
@@ -124,7 +127,7 @@ static struct Directory * hier_sort (char** dirs)
     /* This must not be null initially due to read_this_dir filtering */
     for (; tokens != NULL; tokens = strtok(*dirs, "."))
     {
-      if (dir->subdirs != NULL && (sub = find_subdirs(dir->subdirs, tokens)) != NULL)
+      if (dir->subdirs != NULL && (sub = find_subdirs(dir, tokens)) != NULL)
       {
         dir = sub;
 	
@@ -144,12 +147,12 @@ static struct Directory * hier_sort (char** dirs)
   return dir;
 }
 
-static struct Directory * find_subdirs (struct Directory * subdir, char* token)
+static struct Directory * find_subdirs (struct Directory * dir, char* token)
 {
   int i;
-  assert(subdir != NULL);
-
-  for (i = 0; i <= subdir->last_subdir_index; i++)
+  struct Directory **subdir = dir->subdirs;
+  
+  for (i = 0; i <= dir->last_subdir_index; i++)
   {
     assert(subdir[i] != NULL);
     if (!strcmp(subdir[i]->name, token))
