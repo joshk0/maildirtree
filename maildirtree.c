@@ -79,6 +79,7 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* tr, int* t
 {
   DIR *curdir, *newdir;
   struct dirent *entries;
+  struct stat curfile;
   struct Directory *root = malloc(sizeof(struct Directory));  
   char *cur, *new;
   int count = 0, rlen, len;
@@ -122,7 +123,10 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* tr, int* t
   
   while ((entries = readdir(d)) != NULL)
   {
-    if (*entries->d_name == '.' &&
+    stat (entries->d_name, &curfile);
+
+    if (S_ISDIR(curfile.st_mode) &&
+	*entries->d_name == '.' &&
         strcmp(entries->d_name, ".") &&
         strcmp(entries->d_name, ".."))
     {

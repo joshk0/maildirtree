@@ -1,4 +1,5 @@
 maildirtree
 -----------
 
-- Colors? who knows..
+- Options - summary display, multiple targets...
+- Implicit reading of . when no argument is given
