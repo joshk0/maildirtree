@@ -1,3 +1,8 @@
+maildirtree (0.6):
+
+  - Bugfix where summary mode would not mention new messages in the root
+    Maildir.
+
 maildirtree (0.5):
 
   - Cosmetic fixes for help output.
