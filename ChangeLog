@@ -1,22 +1,22 @@
 maildirtree (0.1):
 
-- First release!
+  - First release!
 
 maildirtree (pre-0.1):
 
-- added support snprintf stuff for mouldy systems without it
-- added a manpage
-- added dist target
-- added configuren and a little documentation
-- create new Makefile
-- move to own repo on the CVS server
-- added support for flatter maildirs (thanks dasunt!)
-- use isatty() to determine whether to implicitly disable colors support
-- use dup() and dup2() to save stderr in case the new -q/--quiet option is
-  used, and restore it using atexit().
-- added a summary mode
-- added color support to message counts
-- added message counts showing unread/total
-- add memory management functions to completely flush a struct Directory *
-  root and all its subdirs on a clean exit
-- killed hier_sort and replaced with read_this_dir and company
+  - added support snprintf stuff for mouldy systems without it
+  - added a manpage
+  - added dist target
+  - added configuren and a little documentation
+  - create new Makefile
+  - move to own repo on the CVS server
+  - added support for flatter maildirs (thanks dasunt!)
+  - use isatty() to determine whether to implicitly disable colors support
+  - use dup() and dup2() to save stderr in case the new -q/--quiet option is
+    used, and restore it using atexit().
+  - added a summary mode
+  - added color support to message counts
+  - added message counts showing unread/total
+  - add memory management functions to completely flush a struct Directory *
+    root and all its subdirs on a clean exit
+  - killed hier_sort and replaced with read_this_dir and company
