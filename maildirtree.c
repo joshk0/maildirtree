@@ -37,12 +37,13 @@ struct Directory {
 typedef enum { false = 0, true } bool;
 #endif
 
-static const char indent [] = "   ";
-static unsigned int indentlen = 3;
+typedef enum { FIRST, MIDDLE, LAST } STATE;
+
+static unsigned int indent_len = 3;
 
 static struct Directory * hier_sort (char** dirs, char* dirName);
 static char** read_this_dir (DIR* d);
-static void print_tree (struct Directory * start, unsigned int level);
+static void print_tree (struct Directory * start, unsigned int level, STATE s);
 
 int main (int argc, char* argv[])
 {
@@ -58,7 +59,7 @@ int main (int argc, char* argv[])
 
       root = hier_sort(dirs, basename(argv[1]));
       
-      print_tree (root, 0);
+      print_tree (root, -1, FIRST);
       
     }
     else {
@@ -160,26 +161,30 @@ create:
     dirs++;
     i = root; /* rewind all the way back */
   }
-  
-  exit (1);
+
+  return root;
 }
 
-static void print_tree (struct Directory * start, unsigned int level)
+static void print_tree (struct Directory * start, unsigned int level, STATE s)
 {
-  return;
-  char* in = (level == 0) ? "" : malloc ((level * indentlen) + 1);
-  unsigned char bar;
-  unsigned int i;
-  
-  for (i = 0; i <= level; i++)
-    strcat (in, indent);
-  
-  printf ("%s%c %s\n", in, bar, start->name);
-  
-  while (start->subdirs != NULL)
+  int j, l = level;
+
+  if (s != FIRST)
   {
-    bar = ((start->subdirs)+1 == NULL) ? '`' : '|';
-    printf("%s%c %s\n", in, bar, (*(start->subdirs))->name);
-    print_tree (*(start->subdirs++), level + 1);
+    while (l--)
+    {
+      int k;
+      putchar('|');
+      for (k = 0; k < indent_len; k++)
+        putchar(' ');
+    }
+    
+    printf("%c- %s\n", (s == LAST) ? '`' : '|', start->name);
   }
+  else
+    puts(start->name);
+  
+  for (j = 0; j < start->count; j++)
+    print_tree (start->subdirs[j], level + 1,
+	    (j == start->count - 1) ? LAST : MIDDLE);
 }
