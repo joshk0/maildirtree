@@ -12,6 +12,11 @@ fi
 
 AC_CHECK_FUNCS([getopt_long snprintf])
 AC_CHECK_HEADERS([getopt.h libgen.h])
+AC_CHECK_PROG(DBM, docbook-to-man, docbook-to-man, missing)
+
+if test "$DBM" = missing; then
+	AC_MSG_WARN(better install docbook-to-man before running make)
+fi
 
 AC_ARG_WITH(indent-len,
 	[AC_HELP_STRING([--with-indent-len], [Aesthetic: chars to offset successive levels by (default 3)])],
