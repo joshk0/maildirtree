@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.9 2003/09/09 00:44:09 joshk Exp $
+# $Id: Makefile.in,v 1.10 2003/09/09 04:22:55 joshk Exp $
 # Small Makefile to ease building of maildirtree
 
 # Used for make dist
@@ -70,7 +70,7 @@ endif
 	docbook-to-man maildirtree.1.sgml > maildirtree.1
 	(cd .. && ln -sf $(CURDIR) $(NAME)-$(VERSION))
 	(cd .. && tar $(addprefix --exclude ,$(exclusions)) -chzf $(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION))
-	rm -f ../$(NAME)-$(VERSION)
+	rm -rf ../$(NAME)-$(VERSION)
 	@echo; echo "Created source release $(VERSION):"; echo
 	@md5sum ../$(NAME)-$(VERSION).tar.gz
 	@echo
