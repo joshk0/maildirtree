@@ -1,8 +1,9 @@
-# $Id: Makefile.in,v 1.2 2003/09/07 01:56:53 joshk Exp $
+# $Id: Makefile.in,v 1.3 2003/09/07 02:07:23 joshk Exp $
 # Small Makefile to ease building of maildirtree
 
 # Used for make dist
 VERSION = @PACKAGE_VERSION@
+exclusions = .cvsignore autogen.sh CVS
 
 CC = @CC@
 CFLAGS = @CFLAGS@
@@ -34,7 +35,7 @@ dist: distclean
 	autoconf
 	rm -rf autom4te.cache *~
 	(cd .. && ln -sf $(CURDIR) maildirtree-$(VERSION))
-	(cd .. && tar --exclude CVS --exclude .cvsignore -chzf maildirtree-$(VERSION).tar.gz maildirtree-$(VERSION))
+	(cd .. && tar $(addprefix --exclude ,$(exclusions)) -chzf maildirtree-$(VERSION).tar.gz maildirtree-$(VERSION))
 	rm -f ../maildirtree-$(VERSION)	
 
 .PHONY: clean distclean install uninstall dist
