@@ -42,7 +42,7 @@
 static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
 static void process (char*, char*);
 static struct Directory * read_this_dir (DIR*, char*, int*, int*, int*);
-static void print_tree (struct Directory *, unsigned int);
+static void print_tree (struct Directory *, int);
 static unsigned int count_messages (DIR *);
 static void clean (struct Directory * root);
 static inline void restore_stderr(void);
@@ -227,9 +227,9 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
 {
   DIR *curdir, *newdir;
   struct dirent *entries;
-  struct Directory *root = malloc(sizeof(struct Directory));  
+  struct Directory *root = (struct Directory *)malloc(sizeof(struct Directory));
   struct stat isdir;
-  char *cur, *new, *stattmp;
+  char *cur_path, *new_path, *stattmp;
   int count = 0, len;
   size_t rlen;
   unsigned int r, u;
@@ -239,14 +239,14 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
   /* Used later, save a call to strlen */
   rlen = strlen(rootpath);
 
-  cur = malloc(rlen + 5);
-  new = malloc(rlen + 5);
+  cur_path = (char *)malloc(rlen + 5);
+  new_path = (char *)malloc(rlen + 5);
   
-  snprintf (cur, rlen + 5, "%s/cur", rootpath);
-  snprintf (new, rlen + 5, "%s/new", rootpath);
+  snprintf (cur_path, rlen + 5, "%s/cur", rootpath);
+  snprintf (new_path, rlen + 5, "%s/new", rootpath);
 
-  curdir = opendir(cur);
-  newdir = opendir(new);
+  curdir = opendir(cur_path);
+  newdir = opendir(new_path);
 
   root->read   = (curdir != NULL) ? count_messages(curdir) : 0;
   root->unread = (newdir != NULL) ? count_messages(newdir) : 0;
@@ -267,8 +267,8 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
   closedir (curdir);
   closedir (newdir);
 
-  free (cur);
-  free (new);
+  free (cur_path);
+  free (new_path);
 
   count = 0;
   
@@ -276,7 +276,7 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
   {
     len = rlen + strlen(entries->d_name) + 6;
 
-    stattmp = malloc (len - 4);
+    stattmp = (char*) malloc(len - 4);
     snprintf (stattmp, len - 4, "%s/%s", rootpath, entries->d_name);
     stat (stattmp, &isdir);
     free (stattmp);
@@ -288,14 +288,14 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
 	strcmp(entries->d_name, "new") &&
 	strcmp(entries->d_name, "tmp"))
     {
-      cur = malloc(len);
-      new = malloc(len);
+      cur_path = (char*)malloc(len);
+      new_path = (char*)malloc(len);
       
-      snprintf (cur, len, "%s/%s/cur", rootpath, entries->d_name);
-      snprintf (new, len, "%s/%s/new", rootpath, entries->d_name);
+      snprintf (cur_path, len, "%s/%s/cur", rootpath, entries->d_name);
+      snprintf (new_path, len, "%s/%s/new", rootpath, entries->d_name);
 
-      curdir = opendir(cur);
-      newdir = opendir(new);
+      curdir = opendir(cur_path);
+      newdir = opendir(new_path);
 
       if (!curdir || !newdir)
       {
@@ -303,8 +303,8 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
         if (curdir) closedir(curdir);
         if (newdir) closedir(newdir);
 
-        free(cur);
-        free(new);
+        free(cur_path);
+        free(new_path);
 
         continue;
       }
@@ -321,8 +321,8 @@ static struct Directory * read_this_dir (DIR* d, char* rootpath, int* fu, int* t
       if (curdir) closedir(curdir);
       if (newdir) closedir(newdir);
       
-      free(cur);
-      free(new);
+      free(cur_path);
+      free(new_path);
     }
   }
 
@@ -374,8 +374,8 @@ static void insert_tree (struct Directory * root, char* dirName, unsigned int re
     {
 create:
       i->count++;
-      i->subdirs = realloc (i->subdirs, sizeof(struct Directory*) * i->count);
-      i->subdirs[i->count - 1] = malloc (sizeof(struct Directory));
+      i->subdirs = (struct Directory **) realloc (i->subdirs, sizeof(struct Directory*) * i->count);
+      i->subdirs[i->count - 1] = (struct Directory *)malloc (sizeof(struct Directory));
       i->subdirs[i->count - 1]->parent = i;
       
       /* There was a 'last' one before this */
@@ -404,7 +404,7 @@ create:
   i->unread = unread;
 }
 
-static void print_tree (struct Directory * start, unsigned int level)
+static void print_tree (struct Directory * start, int level)
 {
   int j, k, l;
   struct Directory *it = start;

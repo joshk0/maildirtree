@@ -4,7 +4,7 @@
 #ifndef INCLUDED_maildirtree_h
 #define INCLUDED_maildirtree_h
 
-#if __STDC_VERSION__ < 199901L
+#if !defined(__cplusplus) && __STDC_VERSION__ < 199901L
 typedef enum { false = 0, true } bool;
 #endif
 
