@@ -1,6 +1,5 @@
 maildirtree
 -----------
 
-- Tweak so it's single pass. Pass the directory we see to hier_sort immediately
-  after we see it.
 - Colors? who knows..
+- Fix the pipe bugs.
