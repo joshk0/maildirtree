@@ -1,14 +1,32 @@
-# $Id: Makefile.in,v 1.4 2003/09/07 02:21:17 joshk Exp $
+# $Id: Makefile.in,v 1.5 2003/09/07 06:52:18 joshk Exp $
 # Small Makefile to ease building of maildirtree
 
 # Used for make dist
 VERSION = @PACKAGE_VERSION@
 exclusions = .cvsignore autogen.sh CVS
 
+# Used for compilation targets
 CC = @CC@
-CFLAGS = @CFLAGS@
+CFLAGS = @CFLAGS@ $(DEFS)
+DEFS = -D_GNU_SOURCE
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
+
+# Used for installation
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+mandir = @mandir@
+
+default: all
+
+all: maildirtree maildirtree.1.gz
+
+maildirtree.1.gz: maildirtree.1
+	gzip -9c $< > $@
+
+maildirtree.1: maildirtree.1.sgml
+	docbook-to-man $< > $@
 
 maildirtree: maildirtree.c maildirtree.h config.h
 	$(CC) $(CFLAGS) maildirtree.c -o $@
@@ -17,18 +35,21 @@ config.h:
 	sh configure
 
 clean:
-	rm -f *.o maildirtree core a.out
+	rm -f *.o maildirtree maildirtree.1 maildirtree.1.gz core a.out
 
 distclean: clean
 	rm -f Makefile config.log config.status config.h *~
 	rm -rf autom4te.cache
 
 install: maildirtree
-	if test ! -d "$(DESTDIR)$(bindir)"; then mkdir $(DESTDIR)$(bindir); fi
+	$(INSTALL) -d $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man1/
 	$(INSTALL_PROGRAM) -m 755 $< $(DESTDIR)$(bindir)/
+	$(INSTALL) -m 644 maildirtree.1.gz $(DESTDIR)$(mandir)/man1/
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/maildirtree
+	rm -f $(DESTDIR)$(mandir)/man1/maildirtree.1.gz
 
 dist: distclean
 	autoheader

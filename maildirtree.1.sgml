@@ -1,0 +1,123 @@
+<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<refentry>
+  <refentryinfo>
+    <address>
+      <email>joshk@triplehelix.org</email>
+    </address>
+    <author>
+       <firstname>Joshua</firstname>
+       <surname>Kwan</surname>
+    </author>
+    <copyright>
+      <year>"2003"</year>
+      <holder>"joshk"</holder>
+    </copyright>
+    <date>September 6, 2003</date>
+  </refentryinfo>
+  <refmeta>
+    <refentrytitle>maildirtree</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>maildirtree</refname>
+    <refpurpose>prints in tree(1) format a flat hierarchy of Maildirs</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>maildirtree</command>
+
+      <arg><option>-h --help</option></arg>
+      <arg><option>-s --summary</option></arg>
+      <arg><option>-n --nocolor</option></arg>
+      <arg><option>-q --quiet</option></arg>
+      <arg><replaceable>maildir ...</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><command>maildirtree</command> will print in <command>tree</command>
+    a hierarchy of folders based on a flat hierarchy that is used for subfolders
+    in Courier-IMAP's Maildir implementation. For more information on how this
+    format works, see <command>maildirtree</command>'s README document.</para>
+
+    <para>It also tries to read other directories and will warn if they do not
+    contain the requisite Maildir directories (cur and new -- tmp is not used
+    by <command>maildirtree</command>. See the BUGS section for more info on
+    the shortcomings of this functionality.</para>
+
+    <para>For the folders it scans successfully, <command>maildirtree</command>
+    will print a count of unread messages against total messages in that
+    folder, and when the directory traversal is complete, will print a total
+    summary of unread and total messages.</para>
+
+  </refsect1>
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <para>In the event that you did not have a suitable getopt_long at
+    compile time, the long options (prefixed with two dashes) will not
+    be available to you.</para>
+
+    <variablelist>
+    
+      <varlistentry>
+        <term><option>-h</option>, <option>--help</option>
+	</term>
+        <listitem>
+          <para>Shows the summary of options available.</para>
+        </listitem>
+      </varlistentry>
+     
+      <varlistentry>
+        <term><option>-s</option>, <option>--summary</option>
+	</term>
+	<listitem>
+	  <para>Only prints summary output for each directory specified.</para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-n</option>, <option>--nocolor</option>
+	</term>
+	<listitem>
+	  <para>Disables color highlighting for folders with unread messages.</para>
+	</listitem>
+      </varlistentry>
+	
+      <varlistentry>
+        <term><option>-q</option>, <option>--quiet</option>
+	</term>
+        <listitem>
+          <para>Same effect as 2>/dev/null. Suppresses all warnings
+	  that <command>maildirtree</command> spits out when traversing
+	  a hierarchy.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>maildir ...</option></term>
+	<listitem>
+	<para>Directories to traverse. If not specified, the current directory
+	will be the root of the traversal.</para>
+	</listitem>
+      </varlistentry>
+      
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <para>maildir(5), tree(1).</para>
+
+  </refsect1>
+  <refsect1>
+    <title>AUTHOR</title>
+
+    <para>This manual page was written by Joshua Kwan &lt;joshk@triplehelix.org&gt;
+    for <command>maildirtree</command>. It is published under the GNU General
+    Public License.</para>
+
+  </refsect1>
+</refentry>

@@ -6,11 +6,12 @@ AC_PROG_INSTALL
 AC_PROG_CC
 AC_C_INLINE
 
+if test "$ac_cv_c_compiler_gnu" = yes; then
+  CFLAGS="-Wall -W $CFLAGS"
+fi
+
 AC_CHECK_FUNCS([getopt_long snprintf])
-AC_CHECK_HEADER(getopt.h,
-	[AC_DEFINE([HAVE_GETOPT_H], 1, [Define if getopt.h is available.])
-	AC_DEFINE([_GNU_SOURCE], 1, [Define to be able to use getopt_long in GNU])],
-	)
+AC_CHECK_HEADERS([getopt.h libgen.h])
 
 AC_ARG_WITH(indent-len,
 	[AC_HELP_STRING([--with-indent-len], [Aesthetic: chars to offset successive levels by (default 3)])],

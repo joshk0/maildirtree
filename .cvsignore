@@ -8,3 +8,5 @@ config.log
 autom4te.cache
 Makefile
 maildirtree
+maildirtree.1
+maildirtree.1.gz

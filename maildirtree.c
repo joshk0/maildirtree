@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#include <libgen.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -28,10 +27,17 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+/* Special headers that aren't always available. */
+
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif
 #include <errno.h>
+
+#ifdef HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
 
 static void insert_tree (struct Directory *, char*, unsigned int, unsigned int);
 static void process (char*, char*);
@@ -42,7 +48,7 @@ static void clean (struct Directory * root);
 static inline void restore_stderr(void);
 
 static char usage [] =
-"Maildirtree 0.1 by Joshua Kwan <joshk@triplehelix.org>\n\
+"Maildirtree " PACKAGE_VERSION " by Joshua Kwan <joshk@triplehelix.org>\n\
 Syntax: maildirtree [opts] maildir [maildir...] \n\
 Options:\n"
 #ifdef HAVE_GETOPT_LONG
